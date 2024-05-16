@@ -1,0 +1,167 @@
+import logging
+
+from pydal import DAL
+from . import model
+from .model import Password, key_lookup, DEFAULT_STARTS, DEFAULT_ENDS, unstr_datetime, DEFAULT
+
+_pylog = logging.getLogger(__name__)
+_pylog.setLevel(logging.INFO)
+
+
+class AuthRbac:
+    name = 'auth_rbac'
+
+    def __init__(self, db: DAL):
+        self.db = db
+
+    @staticmethod
+    def _error(msg):
+        print('ERROR:', msg)
+
+    # gebruik event en rpc live templates (mobiel)
+
+    def add_user(self, email, firstname, fullname, password, member_of):
+        # check if exists
+        email = email.lower().strip()
+        user = model.get_user(self.db, email)
+        if user:
+            raise ValueError('User already exists')
+        else:
+            object_id = model.add_identity(self.db, email, password, member_of, firstname=firstname, fullname=fullname,
+                                           object_type='user')
+            rec = model.get_user(self.db, object_id)
+            return dict(
+                object_id=rec.object_id,
+                email=rec.email,
+                firstname=rec.firstname,
+                fullname=rec.fullname,
+            )
+
+    def add_item(self, email, name, password, member_of):
+        # check if exists
+        email = email.lower().strip()
+        item = model.get_identity(self.db, email, 'item')
+        if item:
+            raise ValueError('Item already exists')
+        else:
+            object_id = model.add_identity(self.db, email, name, None, password, member_of, object_type='item')
+            rec = model.get_identity(self.db, object_id, object_type='item')
+            return dict(
+                object_id=rec.object_id,
+                email=rec.email,
+                name=rec.firstname
+            )
+
+    def add_identity(self, email, name, password, member_of, object_type):
+        # check if exists
+        email = email.lower().strip()
+        if not isinstance(object_type, str):
+            raise ValueError('object_type should be a string')
+        identity = model.get_identity(self.db, email, object_type)
+        if identity:
+            raise ValueError('Item already exists')
+        else:
+            object_id = model.add_identity(self.db, email, name, None, password, member_of, object_type=object_type)
+            rec = model.get_identity(self.db, object_id, object_type=object_type)
+            return dict(
+                object_id=rec.object_id,
+                email=rec.email,
+                name=rec.name
+            )
+
+    def add_group(self, email, name, member_of):
+        # check if exists
+        email = email.lower().strip()
+        group = model.get_group(self.db, email)
+        if group:
+            raise ValueError('Group already exists')
+        else:
+            object_id = model.add_group(self.db, email, name, member_of)
+            rec = model.get_group(self.db, object_id)
+            return dict(
+                object_id=rec.object_id,
+                email=rec.email,
+                name=rec.firstname
+            )
+
+    def update_identity(self, object_id, email=None, name=None, firstname=None, lastname=None, fullname=None,
+                        password=None):
+        user = model.get_identity(self.db, object_id)
+        user.update_record(
+            email=email.lower().strip() if email else user.email,
+            firstname=name if name else firstname if firstname else user.firstname,
+            lastname=lastname if lastname else user.lastname,
+            fullname=fullname if fullname else user.fullname,
+            password=Password.encode(password) if password else user.encoded_password,
+        )
+        self.db.commit()
+
+    def get_user(self, key, return_memberhips=False):
+        rec = model.get_user(self.db, key)
+        result = dict(
+            object_id=rec.object_id,
+            email=rec.email,
+            firstname=rec.firstname,
+            fullname=rec.fullname,
+        )
+        if return_memberhips:
+            result['memberships'] = [dict(
+                object_id=m.object_id,
+                object_type=m.object_type,
+                email=m.email,
+                firstname=m.firstname,
+                fullname=m.fullname,
+            ) for m in model.get_memberships(self.db, rec.object_id, bare=False)]
+        return result
+
+    def get_group(self, key, return_members=True):
+        group_rec = model.get_group(self.db, key)
+        members = []
+        if return_members:
+            members = model.get_members(self.db, group_rec.object_id, bare=False)
+            members = [
+                dict(
+                    object_id=member.object_id,
+                    object_type=member.object_type,
+                    email=member.email,
+                    name=member.firstname,
+                )
+                for member in members
+            ]
+
+        result = dict(
+            object_id=group_rec.object_id,
+            email=group_rec.email,
+            name=group_rec.firstname
+        )
+        if return_members:
+            result['members'] = members
+        return result
+
+    def authenticate_user(self, key, password):
+        return model.authenticate_user(self.db, key=key, password=password)
+
+    def add_membership(self, identity_key, group_key):
+        return model.add_membership(self.db, identity_key, group_key)
+
+    def remove_membership(self, identity_key, group_key):
+        return model.remove_membership(self.db, identity_key, group_key)
+
+    def has_membership(self, user_or_group_key, group_key):
+        key = key_lookup(self.db, user_or_group_key)
+        group = key_lookup(self.db, group_key)
+        memberships = [m.object_id for m in model.get_memberships(self.db, key, bare=False)]
+        return group in memberships
+
+    def add_permission(self, identity_key, target_oid, privilege, starts=DEFAULT_STARTS, ends=DEFAULT_ENDS):
+        starts = unstr_datetime(starts)
+        ends = unstr_datetime(ends)
+        model.add_permission(self.db, identity_key, target_oid, privilege, starts, ends)
+
+    def has_permission(self, identity_key, target_oid, privilege, when=None):
+        when = DEFAULT if when is None else unstr_datetime(when)
+        return model.has_permission(self.db, identity_key, target_oid, privilege, when)
+
+    def remove_permission(self, identity_key, target_oid, privilege, when=None):
+        when = DEFAULT if when is None else unstr_datetime(when)
+        return model.remove_permission(self.db, identity_key, target_oid, privilege, when=when)
