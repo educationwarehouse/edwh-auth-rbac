@@ -82,7 +82,7 @@ extend-exclude = '''
 '''
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/edwh_auth_rbac"]
 
 
 [tool.isort]
