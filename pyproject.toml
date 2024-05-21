@@ -43,11 +43,11 @@ Source = "https://github.com/educationwarehouse/edwh-auth-rbac"
 
 
 [tool.hatch.version]
-path = "src/__init__.py"
+path = "src/edwh_auth_rbac/__init__.py"
 
 [tool.semantic_release]
 branch = "master"
-version_variable = "__init__.py:__version__"
+version_variable = "src/edwh_auth_rbac/__init__.py:__version__"
 change_log = "CHANGELOG.md"
 upload_to_repository = false
 upload_to_release = false
@@ -91,5 +91,5 @@ extend_skip_glob = ["venv*"]
 
 [tool.pytest.ini_options]
 pythonpath = [
-"src",
+    "src",
 ]

@@ -3,3 +3,7 @@
 .env
 .coverage
 coverage.*
+dist/
+build/
+*.egg-info
+
