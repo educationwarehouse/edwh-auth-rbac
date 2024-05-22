@@ -5,7 +5,7 @@ import dotmap
 import pytest
 from pydal import DAL
 
-from src.edwh_auth_rbac.migrations import rbac_migrations
+from src.edwh_auth_rbac.migrations import rbac_views
 from src.edwh_auth_rbac.model import define_auth_rbac_model
 from src.edwh_auth_rbac.rbac import AuthRbac
 
@@ -28,7 +28,7 @@ def database(tmpdir):
             settings = dict(allowed_types=["user", "group"], migrate=True)
 
             define_auth_rbac_model(self.db, settings)
-            rbac_migrations(self.db)
+            rbac_views(self.db)
             return self.db
 
         def __exit__(self, exc_type, exc_value, traceback):
