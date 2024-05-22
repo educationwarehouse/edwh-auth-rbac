@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.0 (2024-05-22)
+
+### Feature
+
+* Publish (postgres) migrations for rbac ([`5d00057`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/5d00057d16e58c87369be0658fa1c62032ea045b))
+
+### Fix
+
+* Improve typing ([`4a1eb6e`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/4a1eb6eec62350729b9e77719dc8426610e2d716))
+
 ## v0.1.1 (2024-05-21)
 
 ### Fix
