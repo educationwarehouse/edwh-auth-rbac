@@ -3,10 +3,13 @@ from edwh_migrate import migration
 
 @migration()
 def rbac_migrations(db):
-    db.executesql("""
+    db.executesql(
+        """
     drop view if exists recursive_memberships;
-    """)
-    db.executesql("""
+    """
+    )
+    db.executesql(
+        """
 create view recursive_memberships as
   -- each root is member of object_id, including one line for himself.
   -- also for a user
@@ -21,14 +24,18 @@ create view recursive_memberships as
     )
     select * from m
 ;
-""")
+"""
+    )
 
-    db.executesql("""
+    db.executesql(
+        """
 drop view if exists recursive_members;
     
-    """)
+    """
+    )
 
-    db.executesql("""
+    db.executesql(
+        """
 create view recursive_members as
     with RECURSIVE m(root, object_id, object_type, level, email, firstname, fullname) as (
         select object_id as root, object_id, object_type, 0, email, firstname, fullname
@@ -42,7 +49,8 @@ create view recursive_members as
     select * from m
 ;
 
-    """)
+    """
+    )
 
     db.commit()
     return True

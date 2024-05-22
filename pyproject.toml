@@ -54,9 +54,7 @@ upload_to_release = false
 build_command = "hatch build"
 
 [tool.su6]
-# every checker:
-directory = "."
-# 'all' and 'fix':
+directory = "src"
 include = []
 exclude = []
 # 'all':
