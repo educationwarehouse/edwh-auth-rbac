@@ -4,7 +4,8 @@ from pydal import DAL
 
 @migration()
 def rbac_tables(db: DAL):
-    db.executesql("""
+    db.executesql(
+        """
     -- start  identity --
 CREATE TABLE "identity"(
     "id" SERIAL PRIMARY KEY,
@@ -36,32 +37,8 @@ CREATE TABLE "permission"(
     "starts" char(35),
     "ends" char(35)
 );
-
-
--- start  recursive_memberships --
-CREATE TABLE "recursive_memberships"(
-    "root" VARCHAR(512) NOT NULL,
-    "object_id" VARCHAR(512) NOT NULL,
-    "object_type" VARCHAR(512),
-    "level" INTEGER,
-    "email" VARCHAR(512),
-    "firstname" VARCHAR(512),
-    "fullname" VARCHAR(512),
-    PRIMARY KEY("root", "object_id")) ;
-
-
--- start  recursive_members --
-CREATE TABLE "recursive_members"(
-    "root" VARCHAR(512) NOT NULL,
-    "object_id" VARCHAR(512) NOT NULL,
-    "object_type" VARCHAR(512),
-    "level" INTEGER,
-    "email" VARCHAR(512),
-    "firstname" VARCHAR(512),
-    "fullname" VARCHAR(512),
-    PRIMARY KEY("root", "object_id")) ;
-
-    """)
+    """
+    )
     db.commit()
     return True
 
