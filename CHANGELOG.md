@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.1 (2024-05-22)
+
+### Fix
+
+* Those views are not tables ([`f2d8496`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/f2d84962bd3aa5bf87901d999f180ac1e9ffd815))
+
 ## v0.2.0 (2024-05-22)
 
 ### Feature
