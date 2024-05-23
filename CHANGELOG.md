@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.2 (2024-05-23)
+
+### Fix
+
+* Make migrations work for postgres (+ add tests for sqlite and psql) ([`a75758c`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/a75758c0851ed46e5e3e623a63073066f6d533f7))
+
 ## v0.2.1 (2024-05-22)
 
 ### Fix
