@@ -6,40 +6,47 @@ from pydal import DAL
 def rbac_tables(db: DAL):
     db.executesql(
         """
-    -- start  identity --
-CREATE TABLE "identity"(
-    "id" SERIAL PRIMARY KEY,
-    "object_id" VARCHAR(36) NOT NULL UNIQUE,
-    "object_type" VARCHAR(512),
-    "created" TIMESTAMP,
-    "email" VARCHAR(512),
-    "firstname" VARCHAR(512),
-    "lastname" VARCHAR(512),
-    "fullname" VARCHAR(512),
-    "encoded_password" VARCHAR(512)
-);
-
-
--- start  membership --
-CREATE TABLE "membership"(
-    "id" SERIAL PRIMARY KEY,
-    "subject" VARCHAR(36) NOT NULL,
-    "member_of" VARCHAR(36) NOT NULL
-);
-
-
--- start  permission --
-CREATE TABLE "permission"(
-    "id" SERIAL PRIMARY KEY,
-    "privilege" VARCHAR(20),
-    "identity_object_id" VARCHAR(36),
-    "target_object_id" VARCHAR(36),
-    "starts" char(35),
-    "ends" char(35)
-);
-    """
+        CREATE TABLE "identity"(
+            "id" SERIAL PRIMARY KEY,
+            "object_id" VARCHAR(36) NOT NULL UNIQUE,
+            "object_type" VARCHAR(512),
+            "created" TIMESTAMP,
+            "email" VARCHAR(512),
+            "firstname" VARCHAR(512),
+            "lastname" VARCHAR(512),
+            "fullname" VARCHAR(512),
+            "encoded_password" VARCHAR(512)
+        );
+        """
     )
+
+    # Create membership table
+    db.executesql(
+        """
+        CREATE TABLE "membership"(
+            "id" SERIAL PRIMARY KEY,
+            "subject" VARCHAR(36) NOT NULL,
+            "member_of" VARCHAR(36) NOT NULL
+        );
+        """
+    )
+
+    # Create permission table
+    db.executesql(
+        """
+        CREATE TABLE "permission"(
+            "id" SERIAL PRIMARY KEY,
+            "privilege" VARCHAR(20),
+            "identity_object_id" VARCHAR(36),
+            "target_object_id" VARCHAR(36),
+            "starts" char(35),
+            "ends" char(35)
+        );
+        """
+    )
+
     db.commit()
+
     return True
 
 
@@ -60,9 +67,9 @@ create view recursive_memberships as
           from identity
         union all
         select root, membership.member_of, i.object_type, m.level+1, i.email, i.firstname, i.fullname
-          from membership join m on subject == m.object_id
+          from membership join m on subject = m.object_id
                join identity i on i.object_id = membership.member_of
-        order by root, m.level+1
+        -- order by root, m.level+1
     )
     select * from m
 ;
@@ -84,9 +91,9 @@ create view recursive_members as
           from identity
         union all
         select root, membership.subject, i.object_type, m.level+1, i.email, i.firstname, i.fullname
-          from membership join m on member_of== m.object_id
+          from membership join m on member_of = m.object_id
                join identity i on i.object_id = membership.subject
-        order by root
+        -- order by root
     )
     select * from m
 ;

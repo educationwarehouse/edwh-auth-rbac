@@ -34,6 +34,7 @@ dev = [
     "python-semantic-release<8",
     "black",
     "su6[all]",
+    "testcontainers",
 ]
 
 [project.urls]
