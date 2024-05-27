@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.4 (2024-05-27)
+
+### Fix
+
+* Is_uuid now says True if the value already is a uuid.UUID; -> fixes `member_of` behavior ([`5030797`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/503079711fb2613c4df900020fc6625c94373d0b))
+
 ## v0.2.3 (2024-05-27)
 
 
