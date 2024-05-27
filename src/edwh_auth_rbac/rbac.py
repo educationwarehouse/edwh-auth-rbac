@@ -3,7 +3,7 @@ import typing
 from typing import Optional
 
 from pydal import DAL
-from typing_extensions import NotRequired
+from typing_extensions import NotRequired, Unpack
 
 from . import model
 from .model import (
@@ -13,7 +13,9 @@ from .model import (
     IdentityKey,
     ObjectTypes,
     Password,
+    RbacKwargs,
     When,
+    define_auth_rbac_model,
     key_lookup,
     unstr_datetime,
 )
@@ -50,6 +52,9 @@ class AuthRbac:
 
     def __init__(self, db: DAL):
         self.db = db
+
+    def define_model(self, **options: Unpack[RbacKwargs]):
+        define_auth_rbac_model(self.db, options)
 
     @staticmethod
     def _error(msg):

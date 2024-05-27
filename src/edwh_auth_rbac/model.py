@@ -10,6 +10,7 @@ from uuid import UUID
 import dateutil.parser
 from pydal import DAL, Field, SQLCustomType
 from pydal.objects import SQLALL, Query, Table
+from typing_extensions import Required
 
 from .helpers import IS_IN_LIST
 
@@ -98,8 +99,9 @@ my_datetime = SQLCustomType(
 
 
 class RbacKwargs(typing.TypedDict, total=False):
-    allowed_types: list[str]
+    allowed_types: Required[list[str]]
     migrate: bool
+    redefine: bool
 
 
 class Identity(typing.Protocol):
@@ -117,6 +119,7 @@ class Identity(typing.Protocol):
 
 def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
     migrate = other_args.get("migrate", False)
+    redefine = other_args.get("redefine", False)
 
     db.define_table(
         "identity",
@@ -131,6 +134,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("fullname", "string"),
         Field("encoded_password", "string"),
         migrate=migrate,
+        redefine=redefine,
     )
 
     db.define_table(
@@ -141,6 +145,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         # Field('starts','datetime', default=DEFAULT_STARTS),
         # Field('ends','datetime', default=DEFAULT_ENDS),
         migrate=migrate,
+        redefine=redefine,
     )
 
     db.define_table(
@@ -154,6 +159,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("starts", type=my_datetime, default=DEFAULT_STARTS),
         Field("ends", type=my_datetime, default=DEFAULT_ENDS),
         migrate=migrate,
+        redefine=redefine,
     )
 
     db.define_table(
@@ -166,6 +172,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("firstname"),
         Field("fullname"),
         migrate=False,  # view
+        redefine=redefine,
         primarykey=["root", "object_id"],  # composed, no primary key
     )
     db.define_table(
@@ -178,6 +185,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("firstname"),
         Field("fullname"),
         migrate=False,  # view
+        redefine=redefine,
         primarykey=["root", "object_id"],  # composed, no primary key
     )
 
