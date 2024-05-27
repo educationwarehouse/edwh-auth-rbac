@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.5 (2024-05-27)
+
+### Fix
+
+* Allow `key_lookup` by whole row (e.g. dict with object_id and/or email) ([`03d5dd0`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/03d5dd041041261737f31b2bd0075312be0a68e3))
+
 ## v0.2.4 (2024-05-27)
 
 ### Fix
