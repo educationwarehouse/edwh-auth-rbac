@@ -70,7 +70,7 @@ class TestSequentially:
         store.truus = rbac.add_user("truus@test.nl", "truus", "truus test", "secret", [])["object_id"]
 
     def test_group_creation(self, rbac, store):
-        store.groups = rbac.add_group("groups@test.nl", "groups", [])["object_id"]
+        store.groups = rbac.add_group("groups@test.nl", "groups", [])
 
         store.articles = rbac.add_group("articles@test.nl", "articles", [store.groups])["object_id"]
         store.all = rbac.add_group("all@test.nl", "all", [store.groups])["object_id"]

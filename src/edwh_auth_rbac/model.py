@@ -19,7 +19,7 @@ class DEFAULT:
     pass
 
 
-IdentityKey: typing.TypeAlias = str | int | UUID
+IdentityKey: typing.TypeAlias = str | int | UUID | dict[str, "IdentityKey"]
 ObjectTypes = typing.Literal["user", "group", "item"]
 When: typing.TypeAlias = str | dt.datetime | typing.Type[DEFAULT]
 
@@ -70,14 +70,20 @@ def is_uuid(s: str | UUID) -> bool:
 
 
 def key_lookup_query(db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None) -> Query:
-    if "@" in str(identity_key):
+    if isinstance(identity_key, dict):
+        return key_lookup_query(
+            db,
+            identity_key.get("object_id") or identity_key.get("email") or identity_key.get("name"),
+            object_type=object_type,
+        )
+    elif "@" in str(identity_key):
         query = db.identity.email == str(identity_key).lower()
     elif isinstance(identity_key, int):
         query = db.identity.id == identity_key
     elif is_uuid(identity_key):
         query = db.identity.object_id == str(identity_key).lower()
     else:
-        # @remco: why??
+        # e.g. for groups, simple lookup by name
         query = db.identity.firstname == identity_key
 
     if object_type:
