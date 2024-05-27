@@ -2,11 +2,17 @@
 
 <!--next-version-placeholder-->
 
-## v0.2.2 (2024-05-27)
+## v0.2.3 (2024-05-27)
 
 ### Fix
 
 * Auth_rbac.define_model() can be used instead of `define_auth_rbac_model` ([`fab9a5a`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/fab9a5a6272238566417b5dd46913e232ffa6776))
+
+## v0.2.2 (2024-05-23)
+
+### Fix
+
+* Make migrations work for postgres (+ add tests for sqlite and psql) ([`a75758c`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/a75758c0851ed46e5e3e623a63073066f6d533f7))
 
 ## v0.2.1 (2024-05-22)
 
