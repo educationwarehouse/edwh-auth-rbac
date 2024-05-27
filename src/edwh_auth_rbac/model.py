@@ -58,11 +58,14 @@ class Password:
         return salt + ":" + cls.hmac_hash(value=password, key="secret_start", salt=salt)
 
 
-def is_uuid(s) -> bool:
+def is_uuid(s: str | UUID) -> bool:
+    if isinstance(s, UUID):
+        return True
+
     try:
         UUID(s)
         return True
-    except Exception:
+    except Exception as e:
         return False
 
 
@@ -74,6 +77,7 @@ def key_lookup_query(db: DAL, identity_key: IdentityKey, object_type: Optional[O
     elif is_uuid(identity_key):
         query = db.identity.object_id == str(identity_key).lower()
     else:
+        # @remco: why??
         query = db.identity.firstname == identity_key
 
     if object_type:
@@ -88,7 +92,7 @@ def key_lookup(db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectT
     rowset = db(query).select(db.identity.object_id)
 
     if len(rowset) != 1:
-        raise ValueError("Keep lookup for {} returned {} results.".format(identity_key, len(rowset)))
+        raise ValueError("Key lookup for {} returned {} results.".format(identity_key, len(rowset)))
 
     return rowset.first().object_id
 
