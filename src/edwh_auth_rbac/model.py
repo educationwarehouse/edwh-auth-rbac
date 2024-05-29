@@ -65,7 +65,7 @@ def is_uuid(s: str | UUID) -> bool:
     try:
         UUID(s)
         return True
-    except Exception as e:
+    except Exception:
         return False
 
 
