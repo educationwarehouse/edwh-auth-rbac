@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2024-05-29)
+
+### Feature
+
+* Allow '*' privileges ([`2980fe1`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/2980fe17038b456d7a101a4486499e3bd3e7a61b))
+
 ## v0.2.7 (2024-05-29)
 
 ### Fix
