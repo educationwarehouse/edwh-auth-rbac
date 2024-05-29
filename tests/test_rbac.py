@@ -25,7 +25,7 @@ def database(tmpdir):
         def __enter__(self):
             self.db = DAL("sqlite://auth_rbac.sqlite", folder=tmpdir)
 
-            settings = dict(allowed_types=["user", "group"], migrate=True)
+            settings = dict(allowed_types=["user", "group", "item"], migrate=True)
 
             define_auth_rbac_model(self.db, settings)
             rbac_views(self.db)
@@ -145,3 +145,17 @@ class TestSequentially:
     def test_removing_a_nested_group(self, rbac, store):
         rbac.remove_membership(store.nested_admin, store.subadmins)
         assert rbac.has_permission(store.nested_admin, store.s, "read") is False
+
+    def test_permission_flow(self, rbac):
+        users = rbac.add_group("users@internal", "Users", [])
+        items = rbac.add_group("items@internal", "Items", [])
+        user = rbac.add_user("test@example", "Test", "Test Example", "secure", [users])
+        item_gid = str(uuid.uuid4())
+
+        item = rbac.add_item(f"@{item_gid}", item_gid, [items], gid=item_gid)
+
+        assert item["object_id"] == item_gid
+
+        rbac.add_permission(users, item_gid, "read")
+
+        assert rbac.has_permission(user, item_gid, "read")

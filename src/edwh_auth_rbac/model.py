@@ -216,7 +216,7 @@ def add_identity(
     if object_type is None:
         raise ValueError("object_type parameter expected")
     object_id = gid or uuid.uuid4()
-    db.identity.validate_and_insert(
+    result = db.identity.validate_and_insert(
         object_id=object_id,
         object_type=object_type,
         email=email,
@@ -224,13 +224,17 @@ def add_identity(
         fullname=fullname,
         encoded_password=Password.encode(password) if password else None,
     )
-    db.commit()
+
+    if e := result.get("errors"):
+        raise ValueError(e)
+
+    # db.commit()
     for key in member_of:
         group_id = key_lookup(db, key, "group")
         if get_group(db, group_id):
             # check each group if it exists.
             add_membership(db, identity_key=object_id, group_key=group_id)
-    db.commit()
+    # db.commit()
     return str(object_id)
 
 
@@ -241,7 +245,7 @@ def add_group(db: DAL, email: str, name: str, member_of: list[IdentityKey]):
 def remove_identity(db: DAL, object_id: IdentityKey):
     removed = db(db.identity.object_id == object_id).delete()
     # todo: remove permissions and group memberships
-    db.commit()
+    # db.commit()
     return removed > 0
 
 
@@ -305,11 +309,13 @@ def add_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey) -
     query = db.membership.subject == identity_oid
     query &= db.membership.member_of == group.object_id
     if db(query).count() == 0:
-        db.membership.validate_and_insert(
+        result = db.membership.validate_and_insert(
             subject=identity_oid,
             member_of=group.object_id,
         )
-    db.commit()
+        if e := result.get("errors"):
+            raise ValueError(e)
+    # db.commit()
 
 
 def remove_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey) -> int:
@@ -318,7 +324,7 @@ def remove_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey
     query = db.membership.subject == identity.object_id
     query &= db.membership.member_of == group.object_id
     deleted = db(query).delete()
-    db.commit()
+    # db.commit()
     return deleted
 
 
@@ -354,14 +360,16 @@ def add_permission(
         )
         # print(db._lastsql)
         return
-    db.permission.validate_and_insert(
+    result = db.permission.validate_and_insert(
         privilege=privilege,
         identity_object_id=identity_oid,
         target_object_id=target_oid,
         starts=starts,
         ends=ends,
     )
-    db.commit()
+    if e := result.get("errors"):
+        raise ValueError(e)
+    # db.commit()
 
 
 def remove_permission(
@@ -380,7 +388,7 @@ def remove_permission(
     query &= permission.starts <= when
     query &= permission.ends >= when
     result = db(query).delete() > 0
-    db.commit()
+    # db.commit()
     # print(db._lastsql)
     return result
 
@@ -428,4 +436,15 @@ def has_permission(
     query &= permission.privilege == privilege
     query &= permission.starts <= when
     query &= permission.ends >= when
+
+    if row := db(permission).select().first():
+        identity = db.identity(object_id=row.identity_object_id)
+        target = db.identity(object_id=row.target_object_id)
+
+        print(
+            row,
+            identity,
+            target,
+        )
+
     return db(query).count() > 0

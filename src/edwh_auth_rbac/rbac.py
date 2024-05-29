@@ -149,7 +149,7 @@ class AuthRbac:
             fullname=fullname if fullname else user.fullname,
             password=Password.encode(password) if password else user.encoded_password,
         )
-        self.db.commit()
+        # self.# db.commit()
 
     def get_user(self, key: IdentityKey, return_memberhips: bool = False) -> UserDict:
         rec = model.get_user(self.db, key)
