@@ -1,5 +1,7 @@
+import os
 import tempfile
 import uuid
+from pathlib import Path
 
 import dotmap
 import pytest
@@ -11,12 +13,20 @@ from src.edwh_auth_rbac.rbac import AuthRbac
 
 namespace = uuid.UUID("84f5c757-4be0-49c8-a3ba-4f4d79167839")
 
+FAKE_TEMPDIR = False
+# FAKE_TEMPDIR = True
+
 
 @pytest.fixture(scope="module")
 def tmpdir():
     with tempfile.TemporaryDirectory() as tmpdirname:
-        print("new tempdir")
-        yield tmpdirname
+        if FAKE_TEMPDIR:
+            fake = Path("/tmp/fake_tmpdir")
+            fake.mkdir(exist_ok=True, parents=True)
+            yield str(fake)
+        else:
+            print("new tempdir")
+            yield tmpdirname
 
 
 @pytest.fixture(scope="module")
@@ -159,3 +169,14 @@ class TestSequentially:
         rbac.add_permission(users, item_gid, "read")
 
         assert rbac.has_permission(user, item_gid, "read")
+
+        admins = rbac.add_group("admins@internal", "Admins", [users])
+        rbac.add_permission(admins, "*", "*")
+
+        admin1 = rbac.add_user("admin1@example", "Admin1", "Admin One", "secure", [admins])
+
+        assert rbac.has_permission(admin1, item_gid, "read")
+        assert rbac.has_permission(admin1, item_gid, "write")
+
+        assert rbac.has_permission(user, item_gid, "read")
+        assert not rbac.has_permission(user, item_gid, "write")
