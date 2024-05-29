@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.6 (2024-05-29)
+
+### Fix
+
+* Make ruff happier ([`22b12e0`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/22b12e03d0556be64990544cfc16ef2fdc46f73a))
+* You can provide a custom gid to add_identity/add_item and password is optional for items ([`986175b`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/986175b7be37aec8559c5d2130082533be15e31f))
+
 ## v0.2.5 (2024-05-27)
 
 ### Fix
