@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.7 (2024-05-29)
+
+### Fix
+
+* Don't autocommit within this library; raise errors from validate_ result ([`b203e46`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/b203e46380e3b0338375c5cbd978fcf6eec5c561))
+
 ## v0.2.6 (2024-05-29)
 
 ### Fix
