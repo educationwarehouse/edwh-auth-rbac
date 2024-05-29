@@ -35,6 +35,7 @@ dev = [
     "black",
     "su6[all]",
     "testcontainers",
+    "requests<2.32", # 2.32 breaks testcontainers
 ]
 
 [project.urls]

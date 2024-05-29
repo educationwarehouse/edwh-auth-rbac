@@ -10,6 +10,7 @@ from uuid import UUID
 import dateutil.parser
 from pydal import DAL, Field, SQLCustomType
 from pydal.objects import SQLALL, Query, Table
+from typing_extensions import Required
 
 from .helpers import IS_IN_LIST
 
@@ -18,7 +19,7 @@ class DEFAULT:
     pass
 
 
-IdentityKey: typing.TypeAlias = str | int | UUID
+IdentityKey: typing.TypeAlias = str | int | UUID | dict[str, "IdentityKey"]
 ObjectTypes = typing.Literal["user", "group", "item"]
 When: typing.TypeAlias = str | dt.datetime | typing.Type[DEFAULT]
 
@@ -57,22 +58,32 @@ class Password:
         return salt + ":" + cls.hmac_hash(value=password, key="secret_start", salt=salt)
 
 
-def is_uuid(s) -> bool:
+def is_uuid(s: str | UUID) -> bool:
+    if isinstance(s, UUID):
+        return True
+
     try:
         UUID(s)
         return True
-    except Exception:
+    except Exception as e:
         return False
 
 
 def key_lookup_query(db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None) -> Query:
-    if "@" in str(identity_key):
+    if isinstance(identity_key, dict):
+        return key_lookup_query(
+            db,
+            identity_key.get("object_id") or identity_key.get("email") or identity_key.get("name"),
+            object_type=object_type,
+        )
+    elif "@" in str(identity_key):
         query = db.identity.email == str(identity_key).lower()
     elif isinstance(identity_key, int):
         query = db.identity.id == identity_key
     elif is_uuid(identity_key):
         query = db.identity.object_id == str(identity_key).lower()
     else:
+        # e.g. for groups, simple lookup by name
         query = db.identity.firstname == identity_key
 
     if object_type:
@@ -87,7 +98,7 @@ def key_lookup(db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectT
     rowset = db(query).select(db.identity.object_id)
 
     if len(rowset) != 1:
-        raise ValueError("Keep lookup for {} returned {} results.".format(identity_key, len(rowset)))
+        raise ValueError("Key lookup for {} returned {} results.".format(identity_key, len(rowset)))
 
     return rowset.first().object_id
 
@@ -98,8 +109,9 @@ my_datetime = SQLCustomType(
 
 
 class RbacKwargs(typing.TypedDict, total=False):
-    allowed_types: list[str]
+    allowed_types: Required[list[str]]
     migrate: bool
+    redefine: bool
 
 
 class Identity(typing.Protocol):
@@ -117,6 +129,7 @@ class Identity(typing.Protocol):
 
 def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
     migrate = other_args.get("migrate", False)
+    redefine = other_args.get("redefine", False)
 
     db.define_table(
         "identity",
@@ -131,6 +144,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("fullname", "string"),
         Field("encoded_password", "string"),
         migrate=migrate,
+        redefine=redefine,
     )
 
     db.define_table(
@@ -141,6 +155,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         # Field('starts','datetime', default=DEFAULT_STARTS),
         # Field('ends','datetime', default=DEFAULT_ENDS),
         migrate=migrate,
+        redefine=redefine,
     )
 
     db.define_table(
@@ -154,6 +169,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("starts", type=my_datetime, default=DEFAULT_STARTS),
         Field("ends", type=my_datetime, default=DEFAULT_ENDS),
         migrate=migrate,
+        redefine=redefine,
     )
 
     db.define_table(
@@ -166,6 +182,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("firstname"),
         Field("fullname"),
         migrate=False,  # view
+        redefine=redefine,
         primarykey=["root", "object_id"],  # composed, no primary key
     )
     db.define_table(
@@ -178,6 +195,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("firstname"),
         Field("fullname"),
         migrate=False,  # view
+        redefine=redefine,
         primarykey=["root", "object_id"],  # composed, no primary key
     )
 

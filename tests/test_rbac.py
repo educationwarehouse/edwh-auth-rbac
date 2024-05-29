@@ -70,10 +70,15 @@ class TestSequentially:
         store.truus = rbac.add_user("truus@test.nl", "truus", "truus test", "secret", [])["object_id"]
 
     def test_group_creation(self, rbac, store):
-        store.articles = rbac.add_group("articles@test.nl", "articles", [])["object_id"]
-        store.all = rbac.add_group("all@test.nl", "all", [])["object_id"]
-        store.users = rbac.add_group("users@test.nl", "users", [])["object_id"]
-        store.admins = rbac.add_group("admins@test.nl", "admins", [])["object_id"]
+        store.groups = rbac.add_group("groups@test.nl", "groups", [])
+
+        store.articles = rbac.add_group("articles@test.nl", "articles", [store.groups])["object_id"]
+        store.all = rbac.add_group("all@test.nl", "all", [store.groups])["object_id"]
+        store.users = rbac.add_group("users@test.nl", "users", [store.groups])["object_id"]
+        store.admins = rbac.add_group("admins@test.nl", "admins", [store.groups])["object_id"]
+
+        assert rbac.has_membership(store.admins, store.groups)
+        assert not rbac.has_membership(store.groups, store.admins)
 
     def test_item_creation(self, rbac, store):
         for name in "abcde":

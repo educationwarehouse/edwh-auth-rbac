@@ -2,6 +2,28 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.5 (2024-05-27)
+
+### Fix
+
+* Allow `key_lookup` by whole row (e.g. dict with object_id and/or email) ([`03d5dd0`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/03d5dd041041261737f31b2bd0075312be0a68e3))
+
+## v0.2.4 (2024-05-27)
+
+### Fix
+
+* Is_uuid now says True if the value already is a uuid.UUID; -> fixes `member_of` behavior ([`5030797`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/503079711fb2613c4df900020fc6625c94373d0b))
+
+## v0.2.3 (2024-05-27)
+
+
+
+## v0.2.3 (2024-05-27)
+
+### Fix
+
+* Auth_rbac.define_model() can be used instead of `define_auth_rbac_model` ([`fab9a5a`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/fab9a5a6272238566417b5dd46913e232ffa6776))
+
 ## v0.2.2 (2024-05-23)
 
 ### Fix
