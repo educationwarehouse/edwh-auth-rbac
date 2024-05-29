@@ -197,7 +197,7 @@ def add_identity(
     email = email.lower().strip()
     if object_type is None:
         raise ValueError("object_type parameter expected")
-    object_id = gid if gid else uuid.uuid4()
+    object_id = gid or uuid.uuid4()
     db.identity.validate_and_insert(
         object_id=object_id,
         object_type=object_type,
@@ -227,12 +227,17 @@ def remove_identity(db: DAL, object_id: IdentityKey):
     return removed > 0
 
 
-def get_identity(db: DAL, key: IdentityKey, object_type: Optional[ObjectTypes] = None) -> Identity:
+def get_identity(db: DAL, key: IdentityKey | None, object_type: Optional[ObjectTypes] = None) -> Identity | None:
     """
     :param db: dal db connection
     :param key: can be the email, id, or object_id
+    :param object_type: what type of object to look for
+
     :return: user record or None when not found
     """
+    if key is None:
+        return None
+
     query = key_lookup_query(db, key, object_type)
     rows = db(query).select()
     return rows.first()

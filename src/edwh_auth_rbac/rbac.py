@@ -77,19 +77,34 @@ class AuthRbac:
                 fullname=rec.fullname,
             )
 
-    def add_item(self, email: str, name: str, password: str, member_of: list[IdentityKey]) -> MinimalIdentityDict:
+    def add_item(
+        self,
+        email: str,
+        name: str,
+        member_of: list[IdentityKey],
+        password: Optional[str] = None,
+        gid: Optional[str] = None,
+    ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
-        item = model.get_identity(self.db, email, "item")
+        item = model.get_identity(self.db, email, "item") or model.get_identity(self.db, gid, "item")
         if item:
             raise ValueError("Item already exists")
         else:
-            object_id = model.add_identity(self.db, email, member_of, name=name, password=password, object_type="item")
+            object_id = model.add_identity(
+                self.db, email, member_of, gid=gid, name=name, password=password, object_type="item"
+            )
             rec = model.get_identity(self.db, object_id, object_type="item")
             return dict(object_id=rec.object_id, email=rec.email, name=rec.firstname)
 
     def add_identity(
-        self, email: str, name: str, password: str, member_of: list[IdentityKey], object_type: ObjectTypes
+        self,
+        email: str,
+        name: str,
+        member_of: list[IdentityKey],
+        object_type: ObjectTypes,
+        password: Optional[str] = None,
+        gid: Optional[str] = None,
     ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
