@@ -206,15 +206,15 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
 
 
 def add_identity(
-        db: DAL,
-        email: str,
-        member_of: list[IdentityKey],
-        name: Optional[str] = None,
-        firstname: Optional[str] = None,
-        fullname: Optional[str] = None,
-        password: Optional[str] = None,
-        gid: Optional[IdentityKey] = None,
-        object_type: Optional[ObjectTypes] = None,
+    db: DAL,
+    email: str,
+    member_of: list[IdentityKey],
+    name: Optional[str] = None,
+    firstname: Optional[str] = None,
+    fullname: Optional[str] = None,
+    password: Optional[str] = None,
+    gid: Optional[IdentityKey] = None,
+    object_type: Optional[ObjectTypes] = None,
 ) -> str:
     """paramaters name and firstname are equal."""
     email = email.lower().strip()
@@ -290,7 +290,7 @@ def get_group(db: DAL, key: IdentityKey):
 
 
 def authenticate_user(
-        db: DAL, password: Optional[str] = None, user: Optional[Identity] = None, key: Optional[IdentityKey] = None
+    db: DAL, password: Optional[str] = None, user: Optional[Identity] = None, key: Optional[IdentityKey] = None
 ) -> bool:
     if not password:
         return False
@@ -346,12 +346,12 @@ def get_members(db: DAL, object_id: IdentityKey, bare: bool = True):
 
 
 def add_permission(
-        db: DAL,
-        identity_key: IdentityKey | typing.Literal["*"],
-        target_oid: IdentityKey | typing.Literal["*"],
-        privilege: str,
-        starts: dt.datetime | str = DEFAULT_STARTS,
-        ends: dt.datetime | str = DEFAULT_ENDS,
+    db: DAL,
+    identity_key: IdentityKey | typing.Literal["*"],
+    target_oid: IdentityKey | typing.Literal["*"],
+    privilege: str,
+    starts: dt.datetime | str = DEFAULT_STARTS,
+    ends: dt.datetime | str = DEFAULT_ENDS,
 ) -> None:
     identity_oid = key_lookup(db, identity_key)
     starts = unstr_datetime(starts)
@@ -378,7 +378,7 @@ def add_permission(
 
 
 def remove_permission(
-        db: DAL, identity_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: When | None = DEFAULT
+    db: DAL, identity_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: When | None = DEFAULT
 ) -> bool:
     identity_oid = key_lookup(db, identity_key)
     if when is DEFAULT:
@@ -416,7 +416,7 @@ def with_alias(db: DAL, source: Table, alias: str) -> Table:
 
 
 def has_permission(
-        db: DAL, user_or_group_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: When | None = DEFAULT
+    db: DAL, user_or_group_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: When | None = DEFAULT
 ) -> bool:
     root_oid = key_lookup(db, user_or_group_key)
     # the permission system
