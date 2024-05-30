@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.1 (2024-05-30)
+
+### Fix
+
+* Memberhips -> memberships; get_ functions can return None ([`ebd7a0b`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/ebd7a0b4940af61e54639eab80cddb256662f239))
+
 ## v0.4.0 (2024-05-30)
 
 ### Feature
