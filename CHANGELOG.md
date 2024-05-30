@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2024-05-30)
+
+### Feature
+
+* Support BYOG (bring your own gid) for all relevant add_ functions (item, group, user; not membership, permission) ([`aeb06d9`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/aeb06d9ad7ba385c57fbc6836da878bd1775ae49))
+
 ## v0.3.0 (2024-05-29)
 
 ### Feature
