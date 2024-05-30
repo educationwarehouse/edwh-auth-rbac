@@ -172,15 +172,17 @@ class AuthRbac:
         )
         # self.# db.commit()
 
-    def get_user(self, key: IdentityKey, return_memberhips: bool = False) -> UserDict:
-        rec = model.get_user(self.db, key)
+    def get_user(self, key: IdentityKey, return_memberships: bool = False) -> UserDict | None:
+        if not (rec := model.get_user(self.db, key)):
+            return None
+
         result: UserDict = dict(
             object_id=rec.object_id,
             email=rec.email,
             firstname=rec.firstname,
             fullname=rec.fullname,
         )
-        if return_memberhips:
+        if return_memberships:
             result["memberships"] = [
                 dict(
                     object_id=m.object_id,
@@ -193,8 +195,10 @@ class AuthRbac:
             ]
         return result
 
-    def get_group(self, key, return_members=True) -> GroupDict:
-        group_rec = model.get_group(self.db, key)
+    def get_group(self, key, return_members=True) -> GroupDict | None:
+        if not (group_rec := model.get_group(self.db, key)):
+            return None
+
         members = []
         if return_members:
             members = model.get_members(self.db, group_rec.object_id, bare=False)
