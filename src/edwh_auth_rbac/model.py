@@ -243,8 +243,8 @@ def add_identity(
     return str(object_id)
 
 
-def add_group(db: DAL, email: str, name: str, member_of: list[IdentityKey]):
-    return add_identity(db, email, member_of, name=name, object_type="group")
+def add_group(db: DAL, email: str, name: str, member_of: list[IdentityKey], gid: Optional[str] = None):
+    return add_identity(db, email, member_of, name=name, object_type="group", gid=gid)
 
 
 def remove_identity(db: DAL, object_id: IdentityKey):

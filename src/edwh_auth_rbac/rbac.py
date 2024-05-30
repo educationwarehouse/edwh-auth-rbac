@@ -63,16 +63,29 @@ class AuthRbac:
     # gebruik event en rpc live templates (mobiel)
 
     def add_user(
-        self, email: str, firstname: str, fullname: str, password: str, member_of: list[IdentityKey]
+        self,
+        email: str,
+        firstname: str,
+        fullname: str,
+        password: str,
+        member_of: list[IdentityKey],
+        gid: Optional[str] = None,
     ) -> UserDict:
         # check if exists
         email = email.lower().strip()
-        user = model.get_user(self.db, email)
+        user = model.get_user(self.db, gid or email)
         if user:
             raise ValueError("User already exists")
         else:
             object_id = model.add_identity(
-                self.db, email, member_of, password=password, firstname=firstname, fullname=fullname, object_type="user"
+                self.db,
+                email,
+                member_of,
+                password=password,
+                firstname=firstname,
+                fullname=fullname,
+                object_type="user",
+                gid=gid,
             )
             rec = model.get_user(self.db, object_id)
             return dict(
@@ -117,17 +130,25 @@ class AuthRbac:
         if model.get_identity(self.db, email, object_type):
             raise ValueError("Item already exists")
         else:
-            object_id = model.add_identity(self.db, email, member_of, name, password=password, object_type=object_type)
+            object_id = model.add_identity(
+                self.db, email, member_of, name, password=password, object_type=object_type, gid=gid
+            )
             rec = model.get_identity(self.db, object_id, object_type=object_type)
             return dict(object_id=rec.object_id, email=rec.email, name=rec.fullname)
 
-    def add_group(self, email: str, name: str, member_of: list[IdentityKey]) -> MinimalIdentityDict:
+    def add_group(
+        self,
+        email: str,
+        name: str,
+        member_of: list[IdentityKey],
+        gid: Optional[str] = None,
+    ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
-        if model.get_group(self.db, email):
+        if model.get_group(self.db, gid or email):
             raise ValueError("Group already exists")
         else:
-            object_id = model.add_group(self.db, email, name, member_of)
+            object_id = model.add_group(self.db, email, name, member_of, gid=gid)
             rec = model.get_group(self.db, object_id)
             return dict(object_id=rec.object_id, email=rec.email, name=rec.firstname)
 

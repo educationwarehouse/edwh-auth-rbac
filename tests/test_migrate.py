@@ -1,8 +1,8 @@
 import tempfile
 
+import pytest
 from pydal import DAL
 from testcontainers.postgres import PostgresContainer
-import pytest
 
 DB_NAME = "edwh_rbac_test"
 
