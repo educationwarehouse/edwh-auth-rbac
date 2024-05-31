@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.2 (2024-05-31)
+
+### Fix
+
+* Replace str.format with fstrings to catch missing variables ([`d9d6457`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/d9d64575f019a0d51573f17aef323805a05e4256))
+
 ## v0.4.1 (2024-05-30)
 
 ### Fix
