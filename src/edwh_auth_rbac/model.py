@@ -95,8 +95,8 @@ def key_lookup_query(db: DAL, identity_key: IdentityKey, object_type: Optional[O
 
 
 def key_lookup(db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None) -> str:
-    if isinstance(identity_key, str) and identity_key in SPECIAL_PERMISSIONS:
-        return identity_key
+    # if isinstance(identity_key, str) and identity_key in SPECIAL_PERMISSIONS:
+    #     return identity_key
 
     query = key_lookup_query(db, identity_key, object_type)
 
@@ -431,10 +431,10 @@ def has_permission(
     # right = db.recursive_memberships.with_alias('right')
 
     # end of ugly hack
-    query = (left.root == root_oid) | (left.root == "*")
-    query &= (right.root == target_oid) | (right.root == "*")
-    query &= (permission.identity_object_id == left.object_id) | (permission.identity_object_id == "*")
-    query &= (permission.target_object_id == right.object_id) | (permission.target_object_id == "*")
+    query = (left.root == root_oid)  # | (left.root == "*")
+    query &= (right.root == target_oid)  # | (right.root == "*")
+    query &= (permission.identity_object_id == left.object_id)  # | (permission.identity_object_id == "*")
+    query &= (permission.target_object_id == right.object_id)  # | (permission.target_object_id == "*")
     query &= (permission.privilege == privilege) | (permission.privilege == "*")
     query &= permission.starts <= when
     query &= permission.ends >= when

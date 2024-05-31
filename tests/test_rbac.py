@@ -173,7 +173,7 @@ class TestSequentially:
         assert rbac.has_permission(user, item_gid, "read")
 
         admins = rbac.add_group("admins@internal", "Admins", [users])
-        rbac.add_permission(admins, "*", "*")
+        rbac.add_permission(admins, item_gid, "*")
 
         admin1 = rbac.add_user("admin1@example", "Admin1", "Admin One", "secure", [admins])
 
