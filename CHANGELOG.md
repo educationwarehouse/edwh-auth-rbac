@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.3 (2024-05-31)
+
+### Fix
+
+* Wildcards are only supported in 'privilege', not as object IDs to prevent confusion ([`6f2928e`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/6f2928e9e7807494d6a2a4add8cdf87263b7566b))
+
 ## v0.4.2 (2024-05-31)
 
 ### Fix
