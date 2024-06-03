@@ -183,6 +183,26 @@ class TestSequentially:
         assert rbac.has_permission(user, item_gid, "read")
         assert not rbac.has_permission(user, item_gid, "write")
 
+        # test add_permission with identity dict or email instead of only gid:
+        id1 = rbac.add_identity(
+            "id1@example",
+            "id1",
+            [],
+            "item",
+        )
+
+        assert not rbac.has_permission(id1, id1, "read")
+
+        rbac.add_permission(
+            id1, id1, "read"
+        )
+
+        assert rbac.has_permission(id1, id1, "read")
+
+        assert not rbac.has_permission(id1, id1, "write")
+        rbac.add_permission("id1@example", "id1@example", "write")
+        assert rbac.has_permission(id1, id1, "write")
+
     def test_existing_uuids(self, rbac):
         assert (
             rbac.add_user("c3@user", "c3", "c3 user", "verysecrets", [], gid="c3685794-5b9f-41d9-a7ec-d7efcd87d253")[
