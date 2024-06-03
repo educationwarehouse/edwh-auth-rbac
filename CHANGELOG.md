@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.0 (2024-06-03)
+
+### Feature
+
+* Improved add_permission and has_permission: target_key will now also be looked up (without ValueError on missing key) ([`df388be`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/df388be6a497f0413c2f627dc8c289887b6d7385))
+
 ## v0.4.3 (2024-05-31)
 
 ### Fix
