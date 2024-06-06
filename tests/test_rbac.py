@@ -168,7 +168,7 @@ class TestSequentially:
 
         assert item["object_id"] == item_gid
 
-        rbac.add_permission(users, item_gid, "read")
+        rbac.add_permissions(users, item_gid, ["read"])
 
         assert rbac.has_permission(user, item_gid, "read")
 
@@ -205,16 +205,17 @@ class TestSequentially:
 
     def test_existing_uuids(self, rbac):
         assert (
-            rbac.add_user("c3@user", "c3", "c3 user", "verysecrets", [], gid="c3685794-5b9f-41d9-a7ec-d7efcd87d253")[
-                "object_id"
-            ]
-            == "c3685794-5b9f-41d9-a7ec-d7efcd87d253"
+                rbac.add_user("c3@user", "c3", "c3 user", "verysecrets", [],
+                              gid="c3685794-5b9f-41d9-a7ec-d7efcd87d253")[
+                    "object_id"
+                ]
+                == "c3685794-5b9f-41d9-a7ec-d7efcd87d253"
         )
         assert (
-            rbac.add_group("ec@group", "ec", [], gid="ecf43e58-a0ec-42fd-8634-bb498e2c4273")["object_id"]
-            == "ecf43e58-a0ec-42fd-8634-bb498e2c4273"
+                rbac.add_group("ec@group", "ec", [], gid="ecf43e58-a0ec-42fd-8634-bb498e2c4273")["object_id"]
+                == "ecf43e58-a0ec-42fd-8634-bb498e2c4273"
         )
         assert (
-            rbac.add_item("2d@item", "2d", [], gid="2d4d8ac4-921e-403f-be06-e34b353b4f43")["object_id"]
-            == "2d4d8ac4-921e-403f-be06-e34b353b4f43"
+                rbac.add_item("2d@item", "2d", [], gid="2d4d8ac4-921e-403f-be06-e34b353b4f43")["object_id"]
+                == "2d4d8ac4-921e-403f-be06-e34b353b4f43"
         )

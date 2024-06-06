@@ -244,6 +244,17 @@ class AuthRbac:
         ends = unstr_datetime(ends)
         return model.add_permission(self.db, identity_key, target_oid, privilege, starts, ends)
 
+    def add_permissions(
+        self,
+        identity_key: IdentityKey,
+        target_oid: IdentityKey,
+        privileges: typing.Iterable[str],
+        starts: When = DEFAULT_STARTS,
+        ends: When = DEFAULT_ENDS,
+    ) -> None:
+        for privilege in privileges:
+            self.add_permission(identity_key, target_oid, privilege, starts, ends)
+
     def has_permission(
         self, identity_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: Optional[When] = None
     ) -> bool:
