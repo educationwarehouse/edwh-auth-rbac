@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.0 (2024-06-06)
+
+### Feature
+
+* `add_permissions` to bulk add privileges ([`6eb08e6`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/6eb08e6a36ceca93847f40cf1d92205553193452))
+
 ## v0.5.0 (2024-06-03)
 
 ### Feature
