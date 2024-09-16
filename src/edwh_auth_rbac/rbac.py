@@ -71,29 +71,32 @@ class AuthRbac:
         member_of: list[IdentityKey],
         gid: Optional[str] = None,
     ) -> UserDict:
+        """
+        Raises:
+            ValueError: if the user (by gid or email) already exists
+        """
         # check if exists
         email = email.lower().strip()
-        user = model.get_user(self.db, gid or email)
-        if user:
+        if model.get_user(self.db, gid or email):
             raise ValueError("User already exists")
-        else:
-            object_id = model.add_identity(
-                self.db,
-                email,
-                member_of,
-                password=password,
-                firstname=firstname,
-                fullname=fullname,
-                object_type="user",
-                gid=gid,
-            )
-            rec = model.get_user(self.db, object_id)
-            return dict(
-                object_id=rec.object_id,
-                email=rec.email,
-                firstname=rec.firstname,
-                fullname=rec.fullname,
-            )
+
+        object_id = model.add_identity(
+            self.db,
+            email,
+            member_of,
+            password=password,
+            firstname=firstname,
+            fullname=fullname,
+            object_type="user",
+            gid=gid,
+        )
+        rec = model.get_user(self.db, object_id)
+        return dict(
+            object_id=rec.object_id,
+            email=rec.email,
+            firstname=rec.firstname,
+            fullname=rec.fullname,
+        )
 
     def add_item(
         self,
