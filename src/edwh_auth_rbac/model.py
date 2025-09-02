@@ -2,7 +2,7 @@ import copy
 import datetime as dt
 import hashlib
 import hmac
-import typing
+import typing as t
 import uuid
 from typing import Optional
 from uuid import UUID
@@ -21,19 +21,24 @@ class DEFAULT:
 
 SPECIAL_PERMISSIONS = {"*"}
 
-IdentityKey: typing.TypeAlias = str | int | UUID | dict[str, "IdentityKey"]
-ObjectTypes = typing.Literal["user", "group", "item"]
-When: typing.TypeAlias = str | dt.datetime | typing.Type[DEFAULT]
+
+class HasIdentityKey(t.TypedDict):
+    object_id: str
+
+
+IdentityKey: t.TypeAlias = str | int | UUID | HasIdentityKey
+ObjectTypes = t.Literal["user", "group", "item"]
+When: t.TypeAlias = str | dt.datetime | t.Type[DEFAULT]
 
 DEFAULT_STARTS = dt.datetime(2000, 1, 1)
 DEFAULT_ENDS = dt.datetime(3000, 1, 1)
 
-T = typing.TypeVar("T")
+T = t.TypeVar("T")
 
 
 def unstr_datetime(s: When | T) -> dt.datetime | T:
     """json helper... might values arrive as str"""
-    return dateutil.parser.parse(s) if isinstance(s, str) else typing.cast(T, s)
+    return dateutil.parser.parse(s) if isinstance(s, str) else t.cast(T, s)
 
 
 class Password:
@@ -71,11 +76,15 @@ def is_uuid(s: str | UUID) -> bool:
         return False
 
 
-def key_lookup_query(db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None) -> Query:
+def key_lookup_query(
+    db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None
+) -> Query:
     if isinstance(identity_key, dict):
         return key_lookup_query(
             db,
-            identity_key.get("object_id") or identity_key.get("email") or identity_key.get("name"),
+            identity_key.get("object_id")
+            or identity_key.get("email")
+            or identity_key.get("name"),
             object_type=object_type,
         )
     elif "@" in str(identity_key):
@@ -95,7 +104,10 @@ def key_lookup_query(db: DAL, identity_key: IdentityKey, object_type: Optional[O
 
 
 def key_lookup(
-    db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None, strict: bool = True
+    db: DAL,
+    identity_key: IdentityKey,
+    object_type: Optional[ObjectTypes] = None,
+    strict: bool = True,
 ) -> str:
     # if isinstance(identity_key, str) and identity_key in SPECIAL_PERMISSIONS:
     #     return identity_key
@@ -106,7 +118,9 @@ def key_lookup(
 
     if len(rowset) != 1:
         if strict:
-            raise ValueError(f"Key lookup for {identity_key} returned {len(rowset)} results.")
+            raise ValueError(
+                f"Key lookup for {identity_key} returned {len(rowset)} results."
+            )
         else:
             return None
 
@@ -114,17 +128,20 @@ def key_lookup(
 
 
 my_datetime = SQLCustomType(
-    type="string", native="char(35)", encoder=(lambda x: x.isoformat(" ")), decoder=(lambda x: dateutil.parser.parse(x))
+    type="string",
+    native="char(35)",
+    encoder=(lambda x: x.isoformat(" ")),
+    decoder=(lambda x: dateutil.parser.parse(x)),
 )
 
 
-class RbacKwargs(typing.TypedDict, total=False):
+class RbacKwargs(t.TypedDict, total=False):
     allowed_types: Required[list[str]]
     migrate: bool
     redefine: bool
 
 
-class Identity(typing.Protocol):
+class Identity(t.Protocol):
     object_id: str
     object_type: str
     created: dt.datetime
@@ -144,8 +161,17 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
     db.define_table(
         "identity",
         # std uuid from uuid libs are 36 chars long
-        Field("object_id", "string", length=36, unique=True, notnull=True, default=str(uuid.uuid4())),
-        Field("object_type", "string", requires=(IS_IN_LIST(other_args["allowed_types"]))),
+        Field(
+            "object_id",
+            "string",
+            length=36,
+            unique=True,
+            notnull=True,
+            default=str(uuid.uuid4()),
+        ),
+        Field(
+            "object_type", "string", requires=(IS_IN_LIST(other_args["allowed_types"]))
+        ),
         Field("created", "datetime", default=dt.datetime.now),
         # email needn't be unique, groups can share email addresses, and with people too
         Field("email", "string"),
@@ -248,7 +274,13 @@ def add_identity(
     return str(object_id)
 
 
-def add_group(db: DAL, email: str, name: str, member_of: list[IdentityKey], gid: Optional[str] = None):
+def add_group(
+    db: DAL,
+    email: str,
+    name: str,
+    member_of: list[IdentityKey],
+    gid: Optional[str] = None,
+):
     return add_identity(db, email, member_of, name=name, object_type="group", gid=gid)
 
 
@@ -259,7 +291,9 @@ def remove_identity(db: DAL, object_id: IdentityKey):
     return removed > 0
 
 
-def get_identity(db: DAL, key: IdentityKey | None, object_type: Optional[ObjectTypes] = None) -> Identity | None:
+def get_identity(
+    db: DAL, key: IdentityKey | None, object_type: Optional[ObjectTypes] = None
+) -> Identity | None:
     """
     :param db: dal db connection
     :param key: can be the email, id, or object_id
@@ -295,7 +329,10 @@ def get_group(db: DAL, key: IdentityKey):
 
 
 def authenticate_user(
-    db: DAL, password: Optional[str] = None, user: Optional[Identity] = None, key: Optional[IdentityKey] = None
+    db: DAL,
+    password: Optional[str] = None,
+    user: Optional[Identity] = None,
+    key: Optional[IdentityKey] = None,
 ) -> bool:
     if not password:
         return False
@@ -328,7 +365,9 @@ def add_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey) -
     # db.commit()
 
 
-def remove_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey) -> int:
+def remove_membership(
+    db: DAL, identity_key: IdentityKey, group_key: IdentityKey
+) -> int:
     identity = get_identity(db, identity_key)
     group = get_group(db, group_key)
     query = db.membership.subject == identity.object_id
@@ -340,20 +379,28 @@ def remove_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey
 
 def get_memberships(db: DAL, object_id: IdentityKey, bare: bool = True):
     query = db.recursive_memberships.root == object_id
-    fields = [db.recursive_memberships.object_id, db.recursive_memberships.object_type] if bare else []
+    fields = (
+        [db.recursive_memberships.object_id, db.recursive_memberships.object_type]
+        if bare
+        else []
+    )
     return db(query).select(*fields)
 
 
 def get_members(db: DAL, object_id: IdentityKey, bare: bool = True):
     query = db.recursive_members.root == object_id
-    fields = [db.recursive_members.object_id, db.recursive_members.object_type] if bare else []
+    fields = (
+        [db.recursive_members.object_id, db.recursive_members.object_type]
+        if bare
+        else []
+    )
     return db(query).select(*fields)
 
 
 def add_permission(
     db: DAL,
-    identity_key: IdentityKey | typing.Literal["*"],
-    target_key: IdentityKey | typing.Literal["*"],
+    identity_key: IdentityKey | t.Literal["*"],
+    target_key: IdentityKey | t.Literal["*"],
     privilege: str,
     starts: dt.datetime | str = DEFAULT_STARTS,
     ends: dt.datetime | str = DEFAULT_ENDS,
@@ -367,7 +414,9 @@ def add_permission(
     ends = unstr_datetime(ends)
     if has_permission(db, identity_oid, target_oid, privilege, when=starts):
         # permission already granted. just skip it
-        print(f"{privilege} permission already granted to {identity_key} on {target_oid} @ {starts} ")
+        print(
+            f"{privilege} permission already granted to {identity_key} on {target_oid} @ {starts} "
+        )
         # print(db._lastsql)
         return
     result = db.permission.validate_and_insert(
@@ -383,7 +432,11 @@ def add_permission(
 
 
 def remove_permission(
-    db: DAL, identity_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: When | None = DEFAULT
+    db: DAL,
+    identity_key: IdentityKey,
+    target_oid: IdentityKey,
+    privilege: str,
+    when: When | None = DEFAULT,
 ) -> bool:
     identity_oid = key_lookup(db, identity_key)
     if when is DEFAULT:
@@ -421,7 +474,11 @@ def with_alias(db: DAL, source: Table, alias: str) -> Table:
 
 
 def has_permission(
-    db: DAL, user_or_group_key: IdentityKey, target_key: IdentityKey, privilege: str, when: When | None = DEFAULT
+    db: DAL,
+    user_or_group_key: IdentityKey,
+    target_key: IdentityKey,
+    privilege: str,
+    when: When | None = DEFAULT,
 ) -> bool:
     root_oid = key_lookup(db, user_or_group_key)
     target_oid = key_lookup(db, target_key, strict=False) or target_key
@@ -442,8 +499,12 @@ def has_permission(
     # end of ugly hack
     query = left.root == root_oid  # | (left.root == "*")
     query &= right.root == target_oid  # | (right.root == "*")
-    query &= permission.identity_object_id == left.object_id  # | (permission.identity_object_id == "*")
-    query &= permission.target_object_id == right.object_id  # | (permission.target_object_id == "*")
+    query &= (
+        permission.identity_object_id == left.object_id
+    )  # | (permission.identity_object_id == "*")
+    query &= (
+        permission.target_object_id == right.object_id
+    )  # | (permission.target_object_id == "*")
     query &= (permission.privilege == privilege) | (permission.privilege == "*")
     query &= permission.starts <= when
     query &= permission.ends >= when

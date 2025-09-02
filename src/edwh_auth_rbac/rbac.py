@@ -70,6 +70,7 @@ class AuthRbac:
         password: str,
         member_of: list[IdentityKey],
         gid: Optional[str] = None,
+        allow_existing: bool = False,
     ) -> UserDict:
         """
         Raises:
@@ -77,8 +78,11 @@ class AuthRbac:
         """
         # check if exists
         email = email.lower().strip()
-        if model.get_user(self.db, gid or email):
-            raise ValueError("User already exists")
+        if existing := model.get_user(self.db, gid or email):
+            if allow_existing:
+                return existing
+            else:
+                raise ValueError("User already exists")
 
         object_id = model.add_identity(
             self.db,
@@ -105,15 +109,27 @@ class AuthRbac:
         member_of: list[IdentityKey],
         password: Optional[str] = None,
         gid: Optional[str] = None,
+        allow_existing: bool = False,
     ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
-        item = model.get_identity(self.db, email, "item") or model.get_identity(self.db, gid, "item")
-        if item:
-            raise ValueError("Item already exists")
+        if existing := (
+            model.get_identity(self.db, email, "item")
+            or model.get_identity(self.db, gid, "item")
+        ):
+            if allow_existing:
+                return existing
+            else:
+                raise ValueError("Item already exists")
         else:
             object_id = model.add_identity(
-                self.db, email, member_of, gid=gid, name=name, password=password, object_type="item"
+                self.db,
+                email,
+                member_of,
+                gid=gid,
+                name=name,
+                password=password,
+                object_type="item",
             )
             rec = model.get_identity(self.db, object_id, object_type="item")
             return dict(object_id=rec.object_id, email=rec.email, name=rec.firstname)
@@ -126,15 +142,25 @@ class AuthRbac:
         object_type: ObjectTypes,
         password: Optional[str] = None,
         gid: Optional[str] = None,
+        allow_existing: bool = False,
     ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
 
-        if model.get_identity(self.db, email, object_type):
-            raise ValueError("Item already exists")
+        if existing := model.get_identity(self.db, email, object_type):
+            if allow_existing:
+                return existing
+            else:
+                raise ValueError("Item already exists")
         else:
             object_id = model.add_identity(
-                self.db, email, member_of, name, password=password, object_type=object_type, gid=gid
+                self.db,
+                email,
+                member_of,
+                name,
+                password=password,
+                object_type=object_type,
+                gid=gid,
             )
             rec = model.get_identity(self.db, object_id, object_type=object_type)
             return dict(object_id=rec.object_id, email=rec.email, name=rec.fullname)
@@ -145,11 +171,15 @@ class AuthRbac:
         name: str,
         member_of: list[IdentityKey],
         gid: Optional[str] = None,
+        allow_existing: bool = False,
     ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
-        if model.get_group(self.db, gid or email):
-            raise ValueError("Group already exists")
+        if existing := model.get_group(self.db, gid or email):
+            if allow_existing:
+                return existing
+            else:
+                raise ValueError("Group already exists")
         else:
             object_id = model.add_group(self.db, email, name, member_of, gid=gid)
             rec = model.get_group(self.db, object_id)
@@ -175,7 +205,9 @@ class AuthRbac:
         )
         # self.# db.commit()
 
-    def get_user(self, key: IdentityKey, return_memberships: bool = False) -> UserDict | None:
+    def get_user(
+        self, key: IdentityKey, return_memberships: bool = False
+    ) -> UserDict | None:
         if not (rec := model.get_user(self.db, key)):
             return None
 
@@ -215,7 +247,11 @@ class AuthRbac:
                 for member in members
             ]
 
-        result: GroupDict = dict(object_id=group_rec.object_id, email=group_rec.email, name=group_rec.firstname)
+        result: GroupDict = dict(
+            object_id=group_rec.object_id,
+            email=group_rec.email,
+            name=group_rec.firstname,
+        )
         if return_members:
             result["members"] = members
         return result
@@ -226,13 +262,19 @@ class AuthRbac:
     def add_membership(self, identity_key: IdentityKey, group_key: IdentityKey) -> None:
         return model.add_membership(self.db, identity_key, group_key)
 
-    def remove_membership(self, identity_key: IdentityKey, group_key: IdentityKey) -> int:
+    def remove_membership(
+        self, identity_key: IdentityKey, group_key: IdentityKey
+    ) -> int:
         return model.remove_membership(self.db, identity_key, group_key)
 
-    def has_membership(self, user_or_group_key: IdentityKey, group_key: IdentityKey) -> bool:
+    def has_membership(
+        self, user_or_group_key: IdentityKey, group_key: IdentityKey
+    ) -> bool:
         key = key_lookup(self.db, user_or_group_key)
         group = key_lookup(self.db, group_key)
-        memberships = (m.object_id for m in model.get_memberships(self.db, key, bare=False))
+        memberships = (
+            m.object_id for m in model.get_memberships(self.db, key, bare=False)
+        )
         return group in memberships
 
     def add_permission(
@@ -245,7 +287,9 @@ class AuthRbac:
     ) -> None:
         starts = unstr_datetime(starts)
         ends = unstr_datetime(ends)
-        return model.add_permission(self.db, identity_key, target_oid, privilege, starts, ends)
+        return model.add_permission(
+            self.db, identity_key, target_oid, privilege, starts, ends
+        )
 
     def add_permissions(
         self,
@@ -259,13 +303,23 @@ class AuthRbac:
             self.add_permission(identity_key, target_oid, privilege, starts, ends)
 
     def has_permission(
-        self, identity_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: Optional[When] = None
+        self,
+        identity_key: IdentityKey,
+        target_oid: IdentityKey,
+        privilege: str,
+        when: Optional[When] = None,
     ) -> bool:
         when = DEFAULT if when is None else unstr_datetime(when)
         return model.has_permission(self.db, identity_key, target_oid, privilege, when)
 
     def remove_permission(
-        self, identity_key: IdentityKey, target_oid: IdentityKey, privilege: str, when: Optional[When] = None
+        self,
+        identity_key: IdentityKey,
+        target_oid: IdentityKey,
+        privilege: str,
+        when: Optional[When] = None,
     ) -> bool:
         when = DEFAULT if when is None else unstr_datetime(when)
-        return model.remove_permission(self.db, identity_key, target_oid, privilege, when=when)
+        return model.remove_permission(
+            self.db, identity_key, target_oid, privilege, when=when
+        )

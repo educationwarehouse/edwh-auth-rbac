@@ -28,14 +28,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "edwh",
-    "edwh-migrate",
     "hatch",
     "python-semantic-release<8",
-    "black",
+    "edwh",
+    "edwh-migrate",
     "su6[all]",
     "testcontainers",
     "requests<2.32", # 2.32 breaks testcontainers
+    "psycopg2-binary"
 ]
 
 [project.urls]
