@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.0 (2025-09-02)
+
+### Feature
+
+* Support `allow_existing` for multiple `add_` function to prevent error on conflict ([`07c5eae`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/07c5eae03696bab07517b3e22283c22c4cfa15a9))
+
 ## v0.6.0 (2024-06-06)
 
 ### Feature
