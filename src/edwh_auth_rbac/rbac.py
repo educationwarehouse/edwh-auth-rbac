@@ -78,23 +78,21 @@ class AuthRbac:
         """
         # check if exists
         email = email.lower().strip()
-        if existing := model.get_user(self.db, gid or email):
-            if allow_existing:
-                return existing
-            else:
+        if rec := model.get_user(self.db, gid or email):
+            if not allow_existing:
                 raise ValueError("User already exists")
-
-        object_id = model.add_identity(
-            self.db,
-            email,
-            member_of,
-            password=password,
-            firstname=firstname,
-            fullname=fullname,
-            object_type="user",
-            gid=gid,
-        )
-        rec = model.get_user(self.db, object_id)
+        else:
+            object_id = model.add_identity(
+                self.db,
+                email,
+                member_of,
+                password=password,
+                firstname=firstname,
+                fullname=fullname,
+                object_type="user",
+                gid=gid,
+            )
+            rec = model.get_user(self.db, object_id)
         return dict(
             object_id=rec.object_id,
             email=rec.email,
@@ -113,13 +111,11 @@ class AuthRbac:
     ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
-        if existing := (
+        if rec := (
             model.get_identity(self.db, email, "item")
             or model.get_identity(self.db, gid, "item")
         ):
-            if allow_existing:
-                return existing
-            else:
+            if not allow_existing:
                 raise ValueError("Item already exists")
         else:
             object_id = model.add_identity(
@@ -132,7 +128,8 @@ class AuthRbac:
                 object_type="item",
             )
             rec = model.get_identity(self.db, object_id, object_type="item")
-            return dict(object_id=rec.object_id, email=rec.email, name=rec.firstname)
+
+        return dict(object_id=rec.object_id, email=rec.email, name=rec.firstname)
 
     def add_identity(
         self,
@@ -147,10 +144,8 @@ class AuthRbac:
         # check if exists
         email = email.lower().strip()
 
-        if existing := model.get_identity(self.db, email, object_type):
-            if allow_existing:
-                return existing
-            else:
+        if rec := model.get_identity(self.db, email, object_type):
+            if not allow_existing:
                 raise ValueError("Item already exists")
         else:
             object_id = model.add_identity(
@@ -163,7 +158,7 @@ class AuthRbac:
                 gid=gid,
             )
             rec = model.get_identity(self.db, object_id, object_type=object_type)
-            return dict(object_id=rec.object_id, email=rec.email, name=rec.fullname)
+        return dict(object_id=rec.object_id, email=rec.email, name=rec.fullname)
 
     def add_group(
         self,
@@ -175,15 +170,13 @@ class AuthRbac:
     ) -> MinimalIdentityDict:
         # check if exists
         email = email.lower().strip()
-        if existing := model.get_group(self.db, gid or email):
-            if allow_existing:
-                return existing
-            else:
+        if rec := model.get_group(self.db, gid or email):
+            if not allow_existing:
                 raise ValueError("Group already exists")
         else:
             object_id = model.add_group(self.db, email, name, member_of, gid=gid)
             rec = model.get_group(self.db, object_id)
-            return dict(object_id=rec.object_id, email=rec.email, name=rec.firstname)
+        return dict(object_id=rec.object_id, email=rec.email, name=rec.firstname)
 
     def update_identity(
         self,
