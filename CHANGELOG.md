@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.1 (2025-09-02)
+
+### Fix
+
+* **allow_existing:** Functions should return specificdicts, not the raw records ([`a2eb929`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/a2eb929b4034c1b52885c0e29819856b2ee6a797))
+
 ## v0.7.0 (2025-09-02)
 
 ### Feature
