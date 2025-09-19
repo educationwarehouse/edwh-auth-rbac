@@ -1,9 +1,32 @@
+"""
+Functions for managing Role-Based Access Control (RBAC) database tables and views.
+
+This module includes functions to define and manage the database schema
+for tables and views used in Role-Based Access Control, such as creating
+tables for identity, membership, and permission, as well as views for
+recursive relationships.
+
+Functions:
+- rbac_tables: Creates the RBAC-related tables in the database.
+- rbac_views: Creates the RBAC-related recursive views in the database.
+"""
 from edwh_migrate import migration
 from pydal import DAL
 
 
 @migration()
 def rbac_tables(db: DAL):
+    """
+    Defines the rbac_tables function, which creates database tables
+    necessary for implementing role-based access control (RBAC) system functionality.
+    This includes the 'identity', 'membership', and 'permission' tables.
+
+    Parameters:
+        db (DAL): The database abstraction layer instance used to execute SQL commands.
+
+    Returns:
+        bool: The status indicating successful execution of the table creation process.
+    """
     db.executesql(
         """
         CREATE TABLE "identity"(
@@ -52,20 +75,49 @@ def rbac_tables(db: DAL):
 
 @migration()
 def rbac_views(db: DAL):
+    """
+    Defines a migration function that manipulates database views for role-based access
+    control (RBAC) using recursive queries. It creates or re-creates specific database
+    views: `recursive_memberships` and `recursive_members`. These views facilitate the
+    handling of hierarchical relationships and membership structures.
+
+    Args:
+        db (DAL): The database abstraction layer that enables executing SQL queries
+        and managing the database.
+
+    Returns:
+        bool: True upon successful completion of the migration.
+    """
     db.executesql(
         """
     drop view if exists recursive_memberships;
     """
     )
+    # 
     db.executesql(
         """
 create view recursive_memberships as
-  -- each root is member of object_id, including one line for himself.
-  -- also for a user
-  with RECURSIVE m(root, object_id, object_type, level, email, firstname, fullname) as (
-        select object_id as root,  object_id, object_type, 0, email, firstname, fullname
-          from identity
+    -- Recursive view that finds all groups/roles that an identity is member of (directly or indirectly)
+    -- For example: if User A is member of Group B, and Group B is member of Group C,
+    -- then this view will show that User A is member of both Group B and Group C
+    -- The 'level' indicates the depth of the membership chain (0 = direct membership)
+with
+    RECURSIVE
+    m(root, object_id, object_type, level, email, firstname, fullname) as (
+        -- Base case: start with each identity being member of itself (level 0)
+        select
+            object_id as root
+          , object_id
+          , object_type
+          , 0
+          , email
+          , firstname
+          , fullname
+            from
+                identity
         union all
+        -- Recursive case: find parent groups/roles through membership table
+        -- For each membership found, increment the level and keep the original root
         select root, membership.member_of, i.object_type, m.level+1, i.email, i.firstname, i.fullname
           from membership join m on subject = m.object_id
                join identity i on i.object_id = membership.member_of
@@ -86,10 +138,27 @@ drop view if exists recursive_members;
     db.executesql(
         """
 create view recursive_members as
-    with RECURSIVE m(root, object_id, object_type, level, email, firstname, fullname) as (
-        select object_id as root, object_id, object_type, 0, email, firstname, fullname
-          from identity
+    -- Recursive view that finds all members of a group/role (directly or indirectly)
+    -- For example: if Group C contains Group B, and Group B contains User A,
+    -- then this view will show that Group C contains both Group B and User A
+    -- The 'level' indicates the depth of the membership chain (0 = direct membership)
+with
+    RECURSIVE
+    m(root, object_id, object_type, level, email, firstname, fullname) as (
+        -- Base case: start with each identity being a member of itself (level 0)
+        select
+            object_id as root
+          , object_id
+          , object_type
+          , 0
+          , email
+          , firstname
+          , fullname
+            from
+                identity
         union all
+        -- Recursive case: find child members through membership table
+        -- For each member found, increment the level and keep the original root
         select root, membership.subject, i.object_type, m.level+1, i.email, i.firstname, i.fullname
           from membership join m on member_of = m.object_id
                join identity i on i.object_id = membership.subject
