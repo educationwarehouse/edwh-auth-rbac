@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.3 (2025-09-19)
+
+### Fix
+
+* Added extensive docstrings to enhance clarity and explain RBAC concepts, edge cases, and methods in detail. ([`e8554fb`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/e8554fb48b56d7182489fb8fff83d10ddb39da84))
+
 ## v0.7.2 (2025-09-19)
 
 ### Fix
