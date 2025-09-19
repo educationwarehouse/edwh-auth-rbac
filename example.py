@@ -4,11 +4,10 @@ Example script demonstrating the usage of edwh-auth-rbac library.
 
 This script showcases the basic functionality including:
 - Setting up the RBAC system
-- Creating users and groups
+- Creating identities (user, group and document)
 - Managing permissions
 - Checking permissions
 - Working with recursive group memberships
-- Using time-bound permissions
 """
 
 from pydal import DAL
