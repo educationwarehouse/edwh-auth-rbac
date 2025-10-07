@@ -1,9 +1,9 @@
 import tempfile
 
 import pytest
+from edwh_migrate import migrations as registered_migrations
 from pydal import DAL
 from testcontainers.postgres import PostgresContainer
-from edwh_migrate import migrations as registered_migrations
 
 DB_NAME = "edwh_rbac_test"
 

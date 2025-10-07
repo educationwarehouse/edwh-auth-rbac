@@ -10,6 +10,7 @@ Functions:
 - rbac_tables: Creates the RBAC-related tables in the database.
 - rbac_views: Creates the RBAC-related recursive views in the database.
 """
+
 from edwh_migrate import migration
 from pydal import DAL
 
@@ -103,7 +104,7 @@ def rbac_views(db: DAL):
     """
     wipe_views(db)
 
-    # 
+    #
     db.executesql(
         """
         CREATE VIEW recursive_memberships AS

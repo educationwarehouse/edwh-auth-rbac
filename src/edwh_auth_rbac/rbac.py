@@ -30,6 +30,7 @@ Edge Cases Handled:
 - Case-insensitive email handling
 - Automatic cleanup of related records when identities are removed
 """
+
 import logging
 import typing
 from typing import Optional
