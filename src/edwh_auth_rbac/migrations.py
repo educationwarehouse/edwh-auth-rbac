@@ -103,3 +103,30 @@ create view recursive_members as
 
     db.commit()
     return True
+
+
+@migration()
+def rbac_varchar36_to_uuid(db: DAL):
+    db.executesql("""
+    -- Convert identity.object_id from VARCHAR(36) to UUID
+    ALTER TABLE identity
+    ALTER COLUMN object_id TYPE uuid
+    USING object_id::uuid;
+
+    -- Convert membership.subject and membership.member_of
+    ALTER TABLE membership
+    ALTER COLUMN subject TYPE uuid
+    USING subject::uuid,
+    ALTER COLUMN member_of TYPE uuid
+    USING member_of::uuid;
+
+    -- Convert permission.identity_object_id and permission.target_object_id
+    ALTER TABLE permission
+    ALTER COLUMN identity_object_id TYPE uuid
+    USING identity_object_id::uuid,
+    ALTER COLUMN target_object_id TYPE uuid
+    USING target_object_id::uuid;
+    """)
+
+    db.commit()
+    return True
