@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.8.0 (2025-10-07)
+
+### Feature
+
+* `rbac_varchar36_to_uuid` migration ([`3c52fb5`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/3c52fb5bc53aacb56b6d54c6ff88c9e5a366d816))
+
 ## v0.7.3 (2025-09-19)
 
 ### Fix
