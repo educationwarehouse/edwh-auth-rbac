@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.8.1 (2025-10-07)
+
+### Fix
+
+* **migrate:** Wipe views before changing source tables, recreate afterwards ([`4fed455`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/4fed45526e88bd760074431898e43714e660f846))
+
 ## v0.8.0 (2025-10-07)
 
 ### Feature
