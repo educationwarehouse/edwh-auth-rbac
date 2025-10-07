@@ -2,6 +2,23 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.3 (2025-09-19)
+
+### Fix
+
+* Added extensive docstrings to enhance clarity and explain RBAC concepts, edge cases, and methods in detail. ([`e8554fb`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/e8554fb48b56d7182489fb8fff83d10ddb39da84))
+
+## v0.7.2 (2025-09-19)
+
+### Fix
+
+* Bumping for a documentation release ([`cdd72f0`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/cdd72f07bf179bb507bd73d98bc944c1c1fb12a9))
+
+### Documentation
+
+* Added example script and extended README with usage instructions for edwh-auth-rbac library. ([`e8efac5`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/e8efac57b8ac26ef0cef60737961cfb4955c1a38))
+* Added comprehensive docstrings and comments for improved code clarity and maintainability across all RBAC-related modules. ([`56b4fd7`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/56b4fd7cd359c8b60dc16edf4d7fa2a23699746f))
+
 ## v0.7.1 (2025-09-02)
 
 ### Fix
