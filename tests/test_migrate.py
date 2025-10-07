@@ -3,6 +3,7 @@ import tempfile
 import pytest
 from pydal import DAL
 from testcontainers.postgres import PostgresContainer
+from edwh_migrate import migrations as registered_migrations
 
 DB_NAME = "edwh_rbac_test"
 
@@ -49,5 +50,5 @@ def test_postgres_migrate(conn_str: str, tempdir: str):
 
     db = DAL(conn_str, migrate=False, folder=tempdir)
 
-    assert migrations.rbac_tables(db)
-    assert migrations.rbac_views(db)
+    for migration_name, migration in registered_migrations:
+        assert migration(db)
