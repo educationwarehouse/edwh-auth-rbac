@@ -204,3 +204,66 @@ def rbac_varchar36_to_uuid(db: DAL):
 
     db.commit()
     return True
+
+
+@migration()
+def rbac_treeview(db: DAL):
+    db.executesql("""
+    CREATE OR REPLACE FUNCTION rbac_tree(root_email TEXT DEFAULT NULL)
+        RETURNS TABLE (
+            tree TEXT,
+            object_type VARCHAR,
+            email VARCHAR
+        ) AS $$
+        BEGIN
+            RETURN QUERY
+            WITH RECURSIVE member_tree AS (
+                -- Base case: Start with specified root or all root groups
+                SELECT
+                    i.object_id,
+                    i.email,
+                    COALESCE(i.fullname, i.firstname) AS display_name,
+                    i.object_type,
+                    0 AS depth,
+                    ARRAY[i.object_id] AS id_path,
+                    i.email::text AS sort_path
+                FROM identity i
+                WHERE (
+                    -- If root_email is specified, start from that identity
+                    (root_email IS NOT NULL AND i.email = root_email)
+                    OR
+                    -- Otherwise, start from all root groups (those not members of anything)
+                    (root_email IS NULL
+                     AND NOT EXISTS (SELECT 1 FROM membership m WHERE m.subject = i.object_id)
+                     AND i.object_type = 'group')
+                )
+
+                UNION ALL
+
+                -- Recursive case: Find all direct members
+                SELECT
+                    i.object_id,
+                    i.email,
+                    COALESCE(i.fullname, i.firstname) AS display_name,
+                    i.object_type,
+                    mt.depth + 1,
+                    mt.id_path || i.object_id,
+                    mt.sort_path || '|' || i.email::text
+                FROM identity i
+                JOIN membership m ON i.object_id = m.subject
+                JOIN member_tree mt ON m.member_of = mt.object_id
+                WHERE NOT (i.object_id = ANY(mt.id_path))
+            )
+            SELECT
+                REPEAT('^', depth) || ' ' || display_name AS tree,
+                member_tree.object_type,
+                member_tree.email
+            FROM member_tree
+            ORDER BY sort_path, member_tree.object_type DESC, display_name;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        -- examples:
+        -- select * from rbac_tree()
+        -- select * from rbac_tree('members@internal')
+    """)
