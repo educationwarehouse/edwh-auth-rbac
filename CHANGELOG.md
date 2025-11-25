@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0-beta.1 (2025-11-25)
+
+### Feature
+
+* `get_permissions` and `get_permissions_subquery` functions ([`bf5cc55`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/bf5cc55d302855a52433a5db047b30fa15280283))
+
+### Fix
+
+* Add debug `rbac_tree` function to see tree view of identities and memberships ([`64a8442`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/64a84426e4ca9282fa39c50ce0dfbe89a0ae2bde))
+
 ## v0.8.1 (2025-10-07)
 
 ### Fix
