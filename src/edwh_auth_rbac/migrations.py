@@ -267,3 +267,6 @@ def rbac_treeview(db: DAL):
         -- select * from rbac_tree()
         -- select * from rbac_tree('members@internal')
     """)
+
+    db.commit()
+    return True

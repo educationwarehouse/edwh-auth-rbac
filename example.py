@@ -10,8 +10,6 @@ This script showcases the basic functionality including:
 - Working with recursive group memberships
 """
 
-import datetime as dt
-
 from pydal import DAL
 
 from edwh_auth_rbac import AuthRbac

@@ -855,6 +855,7 @@ def add_permission(
         )
         # print(db._lastsql)
         return
+
     result = db.permission.validate_and_insert(
         privilege=privilege,
         identity_object_id=identity_oid,
@@ -1042,3 +1043,110 @@ def has_permission(
     query &= permission.ends >= when
 
     return db(query).count() > 0
+
+
+def get_permissions(
+    db: DAL,
+    user_or_group_key: IdentityKey,
+    privilege: str | None = None,
+    when: When | None = DEFAULT,
+) -> list[IdentityKey]:
+    """
+    Get all target objects that an identity has permissions on.
+
+    Parameters
+    ----------
+    db : DAL
+        The database connection object
+    user_or_group_key : IdentityKey
+        The user or group whose permissions are being retrieved
+    privilege : str | None, optional
+        Specific privilege to filter by. If None, returns all targets
+        with any permission
+    when : When | None, optional
+        The time at which to check permissions (default: current time)
+
+    Returns
+    -------
+    list[IdentityKey]
+        List of target object IDs the identity has permissions on
+    """
+    root_oid = key_lookup(db, user_or_group_key)
+
+    if when is DEFAULT:
+        when = dt.datetime.now()
+    else:
+        when = unstr_datetime(when)
+
+    permission = db.permission
+    left = with_alias(db, db.recursive_memberships, "left")
+    right = with_alias(db, db.recursive_memberships, "right")
+
+    query = left.root == root_oid
+    query &= right.root == db.identity.object_id
+    query &= permission.identity_object_id == left.object_id
+    query &= permission.target_object_id == right.object_id
+
+    if privilege:
+        query &= (permission.privilege == privilege) | (permission.privilege == "*")
+
+    query &= permission.starts <= when
+    query &= permission.ends >= when
+
+    rows = db(query).select(right.object_id, distinct=True)
+    return [row.object_id for row in rows]
+
+
+def get_permissions_subquery(
+    db: DAL,
+    user_or_group_key: IdentityKey,
+    privilege: str | None = None,
+    when: When | None = DEFAULT,
+):
+    """
+    Get a subquery for all target objects that an identity has
+    permissions on.
+
+    Useful for composing larger queries that need to filter by
+    permissions.
+
+    Parameters
+    ----------
+    db : DAL
+        The database connection object
+    user_or_group_key : IdentityKey
+        The user or group whose permissions are being retrieved
+    privilege : str | None, optional
+        Specific privilege to filter by. If None, returns all targets
+        with any permission
+    when : When | None, optional
+        The time at which to check permissions (default: current time)
+
+    Returns
+    -------
+    Query
+        A subquery that can be used in other database queries
+    """
+    root_oid = key_lookup(db, user_or_group_key)
+
+    if when is DEFAULT:
+        when = dt.datetime.now()
+    else:
+        when = unstr_datetime(when)
+
+    permission = db.permission
+    left = with_alias(db, db.recursive_memberships, "left")
+    right = with_alias(db, db.recursive_memberships, "right")
+
+    query = left.root == root_oid
+    query &= right.root == db.identity.object_id
+    query &= permission.identity_object_id == left.object_id
+    query &= permission.target_object_id == right.object_id
+
+    if privilege:
+        query &= (permission.privilege == privilege) | (permission.privilege == "*")
+
+    query &= permission.starts <= when
+    query &= permission.ends >= when
+
+    return db(query)._select(right.object_id)

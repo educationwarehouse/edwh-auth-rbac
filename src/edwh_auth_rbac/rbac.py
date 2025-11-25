@@ -745,3 +745,71 @@ class AuthRbac:
         return model.remove_permission(
             self.db, identity_key, target_oid, privilege, when=when
         )
+
+    def get_permissions(
+        self,
+        user_or_group_key: IdentityKey,
+        privilege: str | None = None,
+        when: When | None = DEFAULT,
+    ):
+        """
+        Get all target objects that an identity has permissions on.
+
+        Parameters
+        ----------
+        user_or_group_key : IdentityKey
+            The user or group whose permissions are being retrieved
+        privilege : str | None, optional
+            Specific privilege to filter by. If None, returns all targets
+            with any permission
+        when : When | None, optional
+            The time at which to check permissions (default: current time)
+
+        Returns
+        -------
+        list[IdentityKey]
+            List of target object IDs the identity has permissions on
+        """
+        return model.get_permissions(
+            self.db,
+            user_or_group_key,
+            privilege,
+            when,
+        )
+
+    def get_permissions_subquery(
+        self,
+        user_or_group_key: IdentityKey,
+        privilege: str | None = None,
+        when: When | None = DEFAULT,
+    ):
+        """
+        Get a subquery for all target objects that an identity has
+        permissions on.
+
+        Useful for composing larger queries that need to filter by
+        permissions.
+
+        Parameters
+        ----------
+        db : DAL
+            The database connection object
+        user_or_group_key : IdentityKey
+            The user or group whose permissions are being retrieved
+        privilege : str | None, optional
+            Specific privilege to filter by. If None, returns all targets
+            with any permission
+        when : When | None, optional
+            The time at which to check permissions (default: current time)
+
+        Returns
+        -------
+        Query
+            A subquery that can be used in other database queries
+        """
+        return model.get_permissions_subquery(
+            self.db,
+            user_or_group_key,
+            privilege,
+            when,
+        )

@@ -46,8 +46,6 @@ def test_sqlite_migrate(tempdir: str):
 
 
 def test_postgres_migrate(conn_str: str, tempdir: str):
-    from src.edwh_auth_rbac import migrations
-
     db = DAL(conn_str, migrate=False, folder=tempdir)
 
     for migration_name, migration in registered_migrations:

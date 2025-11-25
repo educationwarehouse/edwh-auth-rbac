@@ -1,4 +1,3 @@
-import os
 import tempfile
 import uuid
 from pathlib import Path
@@ -252,3 +251,72 @@ class TestSequentially:
             )["object_id"]
             == "2d4d8ac4-921e-403f-be06-e34b353b4f43"
         )
+
+    def test_get_permissions(self, rbac):
+        users = rbac.get_group("users@internal")
+        items = rbac.get_group("items@internal")
+        user = rbac.add_user(
+            "test_perm@example", "Test", "Test Example", "secure", [users]
+        )
+
+        item1_gid = str(uuid.uuid4())
+        item2_gid = str(uuid.uuid4())
+        item3_gid = str(uuid.uuid4())
+        item4_gid = str(uuid.uuid4())
+
+        rbac.add_item(f"@{item1_gid}", item1_gid, [items], gid=item1_gid)
+        rbac.add_item(f"@{item2_gid}", item2_gid, [items], gid=item2_gid)
+        rbac.add_item(f"@{item3_gid}", item3_gid, [items], gid=item3_gid)
+        rbac.add_item(f"@{item4_gid}", item4_gid, [items], gid=item4_gid)
+
+        rbac.add_permission(users, item1_gid, "read")
+        rbac.add_permission(users, item2_gid, "write")
+        rbac.add_permission(users, item3_gid, "*")
+
+        all_perms = rbac.get_permissions(user)
+
+        assert item1_gid in all_perms
+        assert item2_gid in all_perms
+        assert item3_gid in all_perms
+        assert item4_gid not in all_perms
+
+        read_perms = rbac.get_permissions(user, privilege="read")
+        assert item1_gid in read_perms
+        assert item3_gid in read_perms
+        assert item2_gid not in read_perms
+        assert item4_gid not in read_perms
+
+        write_perms = rbac.get_permissions(user, privilege="write")
+        assert item2_gid in write_perms
+        assert item3_gid in write_perms
+        assert item1_gid not in write_perms
+        assert item4_gid not in write_perms
+
+    def test_get_permissions_subquery(self, rbac):
+        users = rbac.get_group("users@internal")
+        items = rbac.get_group("items@internal")
+        user = rbac.add_user(
+            "test_subq@example", "Test", "Test Example", "secure", [users]
+        )
+
+        item1_gid = str(uuid.uuid4())
+        item2_gid = str(uuid.uuid4())
+        item3_gid = str(uuid.uuid4())
+
+        rbac.add_item(f"@{item1_gid}", item1_gid, [items], gid=item1_gid)
+        rbac.add_item(f"@{item2_gid}", item2_gid, [items], gid=item2_gid)
+        rbac.add_item(f"@{item3_gid}", item3_gid, [items], gid=item3_gid)
+
+        rbac.add_permission(users, item1_gid, "read")
+        rbac.add_permission(users, item2_gid, "write")
+
+        subquery = rbac.get_permissions_subquery(user, privilege="read")
+
+        rows = rbac.db(rbac.db.identity.object_id.belongs(subquery)).select(
+            rbac.db.identity.object_id
+        )
+        object_ids = [row.object_id for row in rows]
+
+        assert item1_gid in object_ids
+        assert item2_gid not in object_ids
+        assert item3_gid not in object_ids
