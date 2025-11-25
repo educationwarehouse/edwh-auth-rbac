@@ -270,3 +270,15 @@ def rbac_treeview(db: DAL):
 
     db.commit()
     return True
+
+@migration()
+def rbac_add_default_permission_starts_ends_20251125_001(db: DAL):
+    db.executesql("""
+    ALTER TABLE permission
+        ALTER COLUMN starts SET DEFAULT '2000-01-01 00:00:00',
+        ALTER COLUMN starts SET NOT NULL,
+        ALTER COLUMN ends SET DEFAULT '3000-01-01 00:00:00',
+        ALTER COLUMN ends SET NOT NULL;
+    """)
+    db.commit()
+    return True
