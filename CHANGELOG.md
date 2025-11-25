@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0-beta.2 (2025-11-25)
+
+### Fix
+
+* Set default permission.starts+ends because the queries don't support NULL ([`fd5feb6`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/fd5feb60801f099a57a03a21cb88f8a243a07db0))
+
 ## v0.9.0-beta.1 (2025-11-25)
 
 ### Feature
