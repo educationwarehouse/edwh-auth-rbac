@@ -1,0 +1,7 @@
+
+[services]
+services = "discover"
+minimal = ["pg-0"]
+include_celeries_in_minimal = "false"
+log = ["pg-0"]
+db = ["pg-0"]

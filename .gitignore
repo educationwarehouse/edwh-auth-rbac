@@ -7,5 +7,5 @@ dist/
 build/
 *.egg-info
 venv*
-
-.aider*
+.toml
+migrate/data

@@ -24,6 +24,7 @@ dependencies = [
     'dotmap',
     'edwh-migrate',
     'pydal',
+    "python-dateutil",
 ]
 
 [project.optional-dependencies]
