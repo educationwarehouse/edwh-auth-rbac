@@ -69,7 +69,7 @@ badge = true
 json-indent = 4
 
 [tool.black]
-target-version = ["py310"]
+target-version = ["py313"]
 line-length = 120
 # 'extend-exclude' excludes files or directories in addition to the defaults
 extend-exclude = '''
@@ -81,6 +81,10 @@ extend-exclude = '''
   venv.+|.+\.bak   # idk why it suddenly works, let's not touch it
 )
 '''
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/edwh_auth_rbac"]

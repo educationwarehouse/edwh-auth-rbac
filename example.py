@@ -34,9 +34,7 @@ def main():
     print(f"Created document item: {document_item}")
 
     # Create a group
-    admin_group = rbac.add_group(
-        email="admin@example.com", name="Administrators", member_of=[]
-    )
+    admin_group = rbac.add_group(email="admin@example.com", name="Administrators", member_of=[])
     print(f"Created admin group: {admin_group}")
     # Create a user
     user = rbac.add_user(

@@ -67,52 +67,33 @@ class TestSequentially:
             users = db(db.identity.email.contains("@test.nl")).select()
             db(db.identity.email.contains("@test.nl")).delete()
             for user in users:
-                db(
-                    (db.membership.member_of == user.object_id)
-                    | (db.membership.subject == user.object_id)
-                ).delete()
+                db((db.membership.member_of == user.object_id) | (db.membership.subject == user.object_id)).delete()
                 db(
                     (db.permission.identity_object_id == user.object_id)
                     | (db.permission.target_object_id == user.object_id)
                 ).delete()
             db.commit()
-            assert db(db.identity.email.contains("@test.nl")).count() == 0, (
-                "Howcome @test.nl still exist?"
-            )
+            assert db(db.identity.email.contains("@test.nl")).count() == 0, "Howcome @test.nl still exist?"
 
     def test_user_creation(self, rbac, store):
-        store.remco = rbac.add_user(
-            "remco@test.nl", "remco", "remco test", "secret", []
-        )["object_id"]
-        store.pietje = rbac.add_user(
-            "pietje@test.nl", "pietje", "pietje test", "secret", []
-        )["object_id"]
-        store.truus = rbac.add_user(
-            "truus@test.nl", "truus", "truus test", "secret", []
-        )["object_id"]
+        store.remco = rbac.add_user("remco@test.nl", "remco", "remco test", "secret", [])["object_id"]
+        store.pietje = rbac.add_user("pietje@test.nl", "pietje", "pietje test", "secret", [])["object_id"]
+        store.truus = rbac.add_user("truus@test.nl", "truus", "truus test", "secret", [])["object_id"]
 
     def test_group_creation(self, rbac, store):
         store.groups = rbac.add_group("groups@test.nl", "groups", [])
 
-        store.articles = rbac.add_group("articles@test.nl", "articles", [store.groups])[
-            "object_id"
-        ]
+        store.articles = rbac.add_group("articles@test.nl", "articles", [store.groups])["object_id"]
         store.all = rbac.add_group("all@test.nl", "all", [store.groups])["object_id"]
-        store.users = rbac.add_group("users@test.nl", "users", [store.groups])[
-            "object_id"
-        ]
-        store.admins = rbac.add_group("admins@test.nl", "admins", [store.groups])[
-            "object_id"
-        ]
+        store.users = rbac.add_group("users@test.nl", "users", [store.groups])["object_id"]
+        store.admins = rbac.add_group("admins@test.nl", "admins", [store.groups])["object_id"]
 
         assert rbac.has_membership(store.admins, store.groups)
         assert not rbac.has_membership(store.groups, store.admins)
 
     def test_item_creation(self, rbac, store):
         for name in "abcde":
-            store[name] = rbac.add_user(
-                "article_" + name + "@test.nl", name, "article", "", []
-            )["object_id"]
+            store[name] = rbac.add_user("article_" + name + "@test.nl", name, "article", "", [])["object_id"]
 
     def test_stash_users_in_groups(self, rbac, store):
         rbac.add_membership(store.remco, store.admins)
@@ -159,22 +140,16 @@ class TestSequentially:
         assert rbac.has_permission(store.pietje, store.a, "write") is False
 
     def test_deeper_group_nesting(self, rbac, store):
-        store.subadmins = rbac.add_group("sub_admins@test.nl", "subadmins", [])[
-            "object_id"
-        ]
-        store.subarticles = rbac.add_group("sub_articles@test.nl", "subarticles", [])[
-            "object_id"
-        ]
+        store.subadmins = rbac.add_group("sub_admins@test.nl", "subadmins", [])["object_id"]
+        store.subarticles = rbac.add_group("sub_articles@test.nl", "subarticles", [])["object_id"]
         rbac.add_membership(store.subarticles, store.articles)
         rbac.add_membership(store.subadmins, store.admins)
-        store.nested_admin = rbac.add_user(
-            "nested_admin@test.nl", "nested_admin", "nested_admin test", "secret", []
-        )["object_id"]
+        store.nested_admin = rbac.add_user("nested_admin@test.nl", "nested_admin", "nested_admin test", "secret", [])[
+            "object_id"
+        ]
         rbac.add_membership(store.nested_admin, store.subadmins)
         for name in "stuvw":
-            store[name] = rbac.add_user(
-                "article_" + name + "@test.nl", name, "subarticle", "", []
-            )["object_id"]
+            store[name] = rbac.add_user("article_" + name + "@test.nl", name, "subarticle", "", [])["object_id"]
             rbac.add_membership(store[name], store.subarticles)
         assert rbac.has_permission(store.nested_admin, store.s, "read") is True
 
@@ -199,9 +174,7 @@ class TestSequentially:
         admins = rbac.add_group("admins@internal", "Admins", [users])
         rbac.add_permission(admins, item_gid, "*")
 
-        admin1 = rbac.add_user(
-            "admin1@example", "Admin1", "Admin One", "secure", [admins]
-        )
+        admin1 = rbac.add_user("admin1@example", "Admin1", "Admin One", "secure", [admins])
 
         assert rbac.has_permission(admin1, item_gid, "read")
         assert rbac.has_permission(admin1, item_gid, "write")
@@ -240,24 +213,18 @@ class TestSequentially:
             == "c3685794-5b9f-41d9-a7ec-d7efcd87d253"
         )
         assert (
-            rbac.add_group(
-                "ec@group", "ec", [], gid="ecf43e58-a0ec-42fd-8634-bb498e2c4273"
-            )["object_id"]
+            rbac.add_group("ec@group", "ec", [], gid="ecf43e58-a0ec-42fd-8634-bb498e2c4273")["object_id"]
             == "ecf43e58-a0ec-42fd-8634-bb498e2c4273"
         )
         assert (
-            rbac.add_item(
-                "2d@item", "2d", [], gid="2d4d8ac4-921e-403f-be06-e34b353b4f43"
-            )["object_id"]
+            rbac.add_item("2d@item", "2d", [], gid="2d4d8ac4-921e-403f-be06-e34b353b4f43")["object_id"]
             == "2d4d8ac4-921e-403f-be06-e34b353b4f43"
         )
 
     def test_get_permissions(self, rbac):
         users = rbac.get_group("users@internal")
         items = rbac.get_group("items@internal")
-        user = rbac.add_user(
-            "test_perm@example", "Test", "Test Example", "secure", [users]
-        )
+        user = rbac.add_user("test_perm@example", "Test", "Test Example", "secure", [users])
 
         item1_gid = str(uuid.uuid4())
         item2_gid = str(uuid.uuid4())
@@ -295,9 +262,7 @@ class TestSequentially:
     def test_get_permissions_subquery(self, rbac):
         users = rbac.get_group("users@internal")
         items = rbac.get_group("items@internal")
-        user = rbac.add_user(
-            "test_subq@example", "Test", "Test Example", "secure", [users]
-        )
+        user = rbac.add_user("test_subq@example", "Test", "Test Example", "secure", [users])
 
         item1_gid = str(uuid.uuid4())
         item2_gid = str(uuid.uuid4())
@@ -312,9 +277,7 @@ class TestSequentially:
 
         subquery = rbac.get_permissions_subquery(user, privilege="read")
 
-        rows = rbac.db(rbac.db.identity.object_id.belongs(subquery)).select(
-            rbac.db.identity.object_id
-        )
+        rows = rbac.db(rbac.db.identity.object_id.belongs(subquery)).select(rbac.db.identity.object_id)
         object_ids = [row.object_id for row in rows]
 
         assert item1_gid in object_ids
