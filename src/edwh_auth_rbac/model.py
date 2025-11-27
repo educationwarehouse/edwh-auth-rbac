@@ -556,7 +556,6 @@ def get_identity(db: DAL, key: IdentityKey | None, object_type: Optional[ObjectT
 
     query = key_lookup_query(db, key, object_type)
     rows = db(query).select(limitby=(0, 1))
-    print("identity", db(query)._select(limitby=(0, 1)))
     return rows.first()
 
 
@@ -834,7 +833,6 @@ def add_permission(
     if has_permission(db, identity_oid, target_oid, privilege, when=starts):
         # permission already granted. just skip it
         print(f"{privilege} permission already granted to {identity_key} on {target_oid} @ {starts} ")
-        # print(db._lastsql)
         return
 
     result = db.permission.validate_and_insert(
@@ -902,8 +900,6 @@ def remove_permission(
     query &= permission.starts <= when
     query &= permission.ends >= when
     result = db(query).delete() > 0
-    # db.commit()
-    # print(db._lastsql)
     return result
 
 
@@ -1019,7 +1015,6 @@ def has_permission(
     query &= permission.starts <= when
     query &= permission.ends >= when
 
-    print("permission", db(query)._count())
     return db(query).count() > 0
 
 
@@ -1072,7 +1067,6 @@ def get_permissions(
     query &= permission.ends >= when
 
     rows = db(query).select(right.object_id, distinct=True)
-    print("permissions", db(query)._select(right.object_id, distinct=True))
     return [row.object_id for row in rows]
 
 
