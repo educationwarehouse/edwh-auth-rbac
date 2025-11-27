@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.0 (2025-11-27)
+
+### Fix
+
+* Remove debug prints ([`2ea7de7`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/2ea7de799de165800988dca1564fbda12c7a265d))
+
 ## v0.9.0-beta.4 (2025-11-27)
 
 ### Fix
