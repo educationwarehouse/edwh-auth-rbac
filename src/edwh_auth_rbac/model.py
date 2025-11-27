@@ -149,9 +149,7 @@ def is_uuid(s: str | UUID) -> bool:
         return False
 
 
-def key_lookup_query(
-    db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None
-) -> Query:
+def key_lookup_query(db: DAL, identity_key: IdentityKey, object_type: Optional[ObjectTypes] = None) -> Query:
     """
     Builds a database query to find an identity based on various key formats.
 
@@ -185,9 +183,7 @@ def key_lookup_query(
     if isinstance(identity_key, dict):
         return key_lookup_query(
             db,
-            identity_key.get("object_id")
-            or identity_key.get("email")
-            or identity_key.get("name"),
+            identity_key.get("object_id") or identity_key.get("email") or identity_key.get("name"),
             object_type=object_type,
         )
     elif "@" in str(identity_key):
@@ -241,9 +237,7 @@ def key_lookup(
 
     if len(rowset) != 1:
         if strict:
-            raise ValueError(
-                f"Key lookup for {identity_key} returned {len(rowset)} results."
-            )
+            raise ValueError(f"Key lookup for {identity_key} returned {len(rowset)} results.")
         else:
             return None
 
@@ -322,9 +316,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
             notnull=True,
             default=str(uuid.uuid4()),
         ),
-        Field(
-            "object_type", "string", requires=(IS_IN_LIST(other_args["allowed_types"]))
-        ),
+        Field("object_type", "string", requires=(IS_IN_LIST(other_args["allowed_types"]))),
         Field("created", "datetime", default=dt.datetime.now),
         # email needn't be unique, groups can share email addresses, and with people too
         Field("email", "string"),
@@ -373,6 +365,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         migrate=False,  # view
         redefine=redefine,
         primarykey=["root", "object_id"],  # composed, no primary key
+        rname="recursive_memberships",
     )
     db.define_table(
         "recursive_members",
@@ -386,6 +379,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         migrate=False,  # view
         redefine=redefine,
         primarykey=["root", "object_id"],  # composed, no primary key
+        rname="recursive_members",
     )
 
 
@@ -549,9 +543,7 @@ def remove_identity(db: DAL, object_id: IdentityKey) -> bool:
     return removed > 0
 
 
-def get_identity(
-    db: DAL, key: IdentityKey | None, object_type: Optional[ObjectTypes] = None
-) -> Identity | None:
+def get_identity(db: DAL, key: IdentityKey | None, object_type: Optional[ObjectTypes] = None) -> Identity | None:
     """
     :param db: dal db connection
     :param key: can be the email, id, or object_id
@@ -563,7 +555,8 @@ def get_identity(
         return None
 
     query = key_lookup_query(db, key, object_type)
-    rows = db(query).select()
+    rows = db(query).select(limitby=(0, 1))
+    print("identity", db(query)._select(limitby=(0, 1)))
     return rows.first()
 
 
@@ -685,9 +678,7 @@ def add_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey) -
     # db.commit()
 
 
-def remove_membership(
-    db: DAL, identity_key: IdentityKey, group_key: IdentityKey
-) -> int:
+def remove_membership(db: DAL, identity_key: IdentityKey, group_key: IdentityKey) -> int:
     """
     Removes a membership relationship between an identity and a group.
 
@@ -754,11 +745,7 @@ def get_memberships(db: DAL, object_id: IdentityKey, bare: bool = True):
     """
 
     query = db.recursive_memberships.root == object_id
-    fields = (
-        [db.recursive_memberships.object_id, db.recursive_memberships.object_type]
-        if bare
-        else []
-    )
+    fields = [db.recursive_memberships.object_id, db.recursive_memberships.object_type] if bare else []
     return db(query).select(*fields)
 
 
@@ -791,11 +778,7 @@ def get_members(db: DAL, object_id: IdentityKey, bare: bool = True):
     """
 
     query = db.recursive_members.root == object_id
-    fields = (
-        [db.recursive_members.object_id, db.recursive_members.object_type]
-        if bare
-        else []
-    )
+    fields = [db.recursive_members.object_id, db.recursive_members.object_type] if bare else []
     return db(query).select(*fields)
 
 
@@ -850,9 +833,7 @@ def add_permission(
     ends = unstr_datetime(ends)
     if has_permission(db, identity_oid, target_oid, privilege, when=starts):
         # permission already granted. just skip it
-        print(
-            f"{privilege} permission already granted to {identity_key} on {target_oid} @ {starts} "
-        )
+        print(f"{privilege} permission already granted to {identity_key} on {target_oid} @ {starts} ")
         # print(db._lastsql)
         return
 
@@ -1032,16 +1013,13 @@ def has_permission(
     # end of ugly hack
     query = left.root == root_oid  # | (left.root == "*")
     query &= right.root == target_oid  # | (right.root == "*")
-    query &= (
-        permission.identity_object_id == left.object_id
-    )  # | (permission.identity_object_id == "*")
-    query &= (
-        permission.target_object_id == right.object_id
-    )  # | (permission.target_object_id == "*")
+    query &= permission.identity_object_id == left.object_id  # | (permission.identity_object_id == "*")
+    query &= permission.target_object_id == right.object_id  # | (permission.target_object_id == "*")
     query &= (permission.privilege == privilege) | (permission.privilege == "*")
     query &= permission.starts <= when
     query &= permission.ends >= when
 
+    print("permission", db(query)._count())
     return db(query).count() > 0
 
 
@@ -1094,6 +1072,7 @@ def get_permissions(
     query &= permission.ends >= when
 
     rows = db(query).select(right.object_id, distinct=True)
+    print("permissions", db(query)._select(right.object_id, distinct=True))
     return [row.object_id for row in rows]
 
 

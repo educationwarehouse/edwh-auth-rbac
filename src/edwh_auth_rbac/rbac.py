@@ -262,10 +262,7 @@ class AuthRbac:
 
         # check if exists
         email = email.lower().strip()
-        if rec := (
-            model.get_identity(self.db, email, "item")
-            or model.get_identity(self.db, gid, "item")
-        ):
+        if rec := (model.get_identity(self.db, email, "item") or model.get_identity(self.db, gid, "item")):
             if not allow_existing:
                 raise ValueError("Item already exists")
         else:
@@ -424,9 +421,16 @@ class AuthRbac:
         )
         # self.# db.commit()
 
-    def get_user(
-        self, key: IdentityKey, return_memberships: bool = False
-    ) -> UserDict | None:
+    def get_identity(self, key: IdentityKey | None, object_type: Optional[ObjectTypes] = None) -> model.Identity | None:
+        """
+        :param key: can be the email, id, or object_id
+        :param object_type: what type of object to look for
+
+        :return: user record or None when not found
+        """
+        return model.get_identity(self.db, key, object_type=object_type)
+
+    def get_user(self, key: IdentityKey, return_memberships: bool = False) -> UserDict | None:
         """
         Retrieve a user identity by key.
 
@@ -555,9 +559,7 @@ class AuthRbac:
 
         return model.add_membership(self.db, identity_key, group_key)
 
-    def remove_membership(
-        self, identity_key: IdentityKey, group_key: IdentityKey
-    ) -> int:
+    def remove_membership(self, identity_key: IdentityKey, group_key: IdentityKey) -> int:
         """
         Remove a membership relationship between an identity and a group.
 
@@ -579,9 +581,7 @@ class AuthRbac:
 
         return model.remove_membership(self.db, identity_key, group_key)
 
-    def has_membership(
-        self, user_or_group_key: IdentityKey, group_key: IdentityKey
-    ) -> bool:
+    def has_membership(self, user_or_group_key: IdentityKey, group_key: IdentityKey) -> bool:
         """
         Check if an identity is a member of a group.
 
@@ -603,9 +603,7 @@ class AuthRbac:
 
         key = key_lookup(self.db, user_or_group_key)
         group = key_lookup(self.db, group_key)
-        memberships = (
-            m.object_id for m in model.get_memberships(self.db, key, bare=False)
-        )
+        memberships = (m.object_id for m in model.get_memberships(self.db, key, bare=False))
         return group in memberships
 
     def add_permission(
@@ -639,9 +637,7 @@ class AuthRbac:
 
         starts = unstr_datetime(starts)
         ends = unstr_datetime(ends)
-        return model.add_permission(
-            self.db, identity_key, target_oid, privilege, starts, ends
-        )
+        return model.add_permission(self.db, identity_key, target_oid, privilege, starts, ends)
 
     def add_permissions(
         self,
@@ -742,9 +738,7 @@ class AuthRbac:
         """
 
         when = DEFAULT if when is None else unstr_datetime(when)
-        return model.remove_permission(
-            self.db, identity_key, target_oid, privilege, when=when
-        )
+        return model.remove_permission(self.db, identity_key, target_oid, privilege, when=when)
 
     def get_permissions(
         self,
