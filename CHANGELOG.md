@@ -4,36 +4,18 @@
 
 ## v1.0.0 (2025-11-27)
 
-### Fix
-
-* Remove debug prints ([`2ea7de7`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/2ea7de799de165800988dca1564fbda12c7a265d))
-
-## v0.9.0-beta.4 (2025-11-27)
-
-### Fix
-
-* Removing memberships now properly updated the recursive_member* tables too ([`8ce87b6`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/8ce87b6588eb282b5dfd3b7bd9b36328cb29c7af))
-
-## v0.9.0-beta.3 (2025-11-27)
-
-### Performance
+### Breaking Changes
 
 * Replaced recursive_ views with edwh _model style logic (tables that get updated via triggers) ([`3f6b4e5`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/3f6b4e510fbdf1b0b1cb18a2050f5866301dd3e2))
 
-## v0.9.0-beta.2 (2025-11-25)
-
-### Fix
-
-* Set default permission.starts+ends because the queries don't support NULL ([`fd5feb6`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/fd5feb60801f099a57a03a21cb88f8a243a07db0))
-
-## v0.9.0-beta.1 (2025-11-25)
-
-### Feature
+### Features
 
 * `get_permissions` and `get_permissions_subquery` functions ([`bf5cc55`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/bf5cc55d302855a52433a5db047b30fa15280283))
 
 ### Fix
 
+* Removing memberships now properly updated the recursive_member* tables too ([`8ce87b6`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/8ce87b6588eb282b5dfd3b7bd9b36328cb29c7af))
+* Set default permission.starts+ends because the queries don't support NULL ([`fd5feb6`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/fd5feb60801f099a57a03a21cb88f8a243a07db0))
 * Add debug `rbac_tree` function to see tree view of identities and memberships ([`64a8442`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/64a84426e4ca9282fa39c50ce0dfbe89a0ae2bde))
 
 ## v0.8.1 (2025-10-07)
