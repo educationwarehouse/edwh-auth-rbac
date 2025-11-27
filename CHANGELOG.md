@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0-beta.3 (2025-11-27)
+
+### Performance
+
+* Replaced recursive_ views with edwh _model style logic (tables that get updated via triggers) ([`3f6b4e5`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/3f6b4e510fbdf1b0b1cb18a2050f5866301dd3e2))
+
 ## v0.9.0-beta.2 (2025-11-25)
 
 ### Fix
