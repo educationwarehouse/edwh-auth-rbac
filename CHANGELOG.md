@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0-beta.4 (2025-11-27)
+
+### Fix
+
+* Removing memberships now properly updated the recursive_member* tables too ([`8ce87b6`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/8ce87b6588eb282b5dfd3b7bd9b36328cb29c7af))
+
 ## v0.9.0-beta.3 (2025-11-27)
 
 ### Performance
