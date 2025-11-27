@@ -323,22 +323,31 @@ def turn_views_into_calculated_tables_20251127_001(db: DAL):
                   """)
 
     db.executesql("""
-                  CREATE OR REPLACE FUNCTION recalc_recursive_memberships()
+                  CREATE OR REPLACE FUNCTION refresh_recursive_memberships()
                       RETURNS TRIGGER AS $$
                   DECLARE
                       affected_roots uuid[];
                       affected_ids   uuid[];
                   BEGIN
                       IF TG_TABLE_NAME = 'membership' THEN
-                          affected_ids := ARRAY[NEW.subject, NEW.member_of];
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY[OLD.subject, OLD.member_of];
+                          ELSE
+                              affected_ids := ARRAY[NEW.subject, NEW.member_of];
+                          END IF;
                           affected_roots := ARRAY(
                               SELECT DISTINCT root
                               FROM recursive_memberships
                               WHERE object_id = ANY(affected_ids)
                           );
                       ELSIF TG_TABLE_NAME = 'identity' THEN
-                          affected_ids := ARRAY[NEW.object_id];
-                          affected_roots := ARRAY[NEW.object_id];
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY[OLD.object_id];
+                              affected_roots := ARRAY[OLD.object_id];
+                          ELSE
+                              affected_ids := ARRAY[NEW.object_id];
+                              affected_roots := ARRAY[NEW.object_id];
+                          END IF;
                       END IF;
 
                       DELETE FROM recursive_memberships
@@ -348,14 +357,14 @@ def turn_views_into_calculated_tables_20251127_001(db: DAL):
                       INSERT INTO recursive_memberships (root, object_id, object_type, level, email, firstname, fullname)
                       WITH RECURSIVE membership_chain(root, object_id, object_type, level, email, firstname, fullname)
                           AS (
-                              SELECT i.object_id, i.object_id, i.object_type, 0, i.email, i.firstname, i.fullname
-                              FROM identity i
-                              WHERE i.object_id = ANY(affected_roots)
+                              SELECT identity_record.object_id, identity_record.object_id, identity_record.object_type, 0, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM identity identity_record
+                              WHERE identity_record.object_id = ANY(affected_roots)
                               UNION ALL
-                              SELECT membership_chain.root, mb.member_of, i.object_type, membership_chain.level + 1, i.email, i.firstname, i.fullname
-                              FROM membership mb
-                              JOIN membership_chain ON mb.subject = membership_chain.object_id
-                              JOIN identity i ON i.object_id = mb.member_of
+                              SELECT membership_chain.root, membership_record.member_of, identity_record.object_type, membership_chain.level + 1, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM membership membership_record
+                              JOIN membership_chain ON membership_record.subject = membership_chain.object_id
+                              JOIN identity identity_record ON identity_record.object_id = membership_record.member_of
                           )
                       SELECT DISTINCT * FROM membership_chain;
 
@@ -365,22 +374,31 @@ def turn_views_into_calculated_tables_20251127_001(db: DAL):
                   """)
 
     db.executesql("""
-                  CREATE OR REPLACE FUNCTION recalc_recursive_members()
+                  CREATE OR REPLACE FUNCTION refresh_recursive_members()
                       RETURNS TRIGGER AS $$
                   DECLARE
                       affected_roots uuid[];
                       affected_ids   uuid[];
                   BEGIN
                       IF TG_TABLE_NAME = 'membership' THEN
-                          affected_ids := ARRAY[NEW.subject, NEW.member_of];
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY[OLD.subject, OLD.member_of];
+                          ELSE
+                              affected_ids := ARRAY[NEW.subject, NEW.member_of];
+                          END IF;
                           affected_roots := ARRAY(
                               SELECT DISTINCT root
                               FROM recursive_members
                               WHERE object_id = ANY(affected_ids)
                           );
                       ELSIF TG_TABLE_NAME = 'identity' THEN
-                          affected_ids := ARRAY[NEW.object_id];
-                          affected_roots := ARRAY[NEW.object_id];
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY[OLD.object_id];
+                              affected_roots := ARRAY[OLD.object_id];
+                          ELSE
+                              affected_ids := ARRAY[NEW.object_id];
+                              affected_roots := ARRAY[NEW.object_id];
+                          END IF;
                       END IF;
 
                       DELETE FROM recursive_members
@@ -390,14 +408,14 @@ def turn_views_into_calculated_tables_20251127_001(db: DAL):
                       INSERT INTO recursive_members (root, object_id, object_type, level, email, firstname, fullname)
                       WITH RECURSIVE member_chain(root, object_id, object_type, level, email, firstname, fullname)
                           AS (
-                              SELECT i.object_id, i.object_id, i.object_type, 0, i.email, i.firstname, i.fullname
-                              FROM identity i
-                              WHERE i.object_id = ANY(affected_roots)
+                              SELECT identity_record.object_id, identity_record.object_id, identity_record.object_type, 0, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM identity identity_record
+                              WHERE identity_record.object_id = ANY(affected_roots)
                               UNION ALL
-                              SELECT member_chain.root, mb.subject, i.object_type, member_chain.level + 1, i.email, i.firstname, i.fullname
-                              FROM membership mb
-                              JOIN member_chain ON mb.member_of = member_chain.object_id
-                              JOIN identity i ON i.object_id = mb.subject
+                              SELECT member_chain.root, membership_record.subject, identity_record.object_type, member_chain.level + 1, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM membership membership_record
+                              JOIN member_chain ON membership_record.member_of = member_chain.object_id
+                              JOIN identity identity_record ON identity_record.object_id = membership_record.subject
                           )
                       SELECT DISTINCT * FROM member_chain;
 
@@ -407,33 +425,34 @@ def turn_views_into_calculated_tables_20251127_001(db: DAL):
                   """)
 
     db.executesql("""
-                  CREATE OR REPLACE FUNCTION repopulate_recursive_tables()
+                  CREATE OR REPLACE FUNCTION rebuild_recursive_tables()
                       RETURNS void AS $$
                   BEGIN
                       DELETE FROM recursive_memberships;
                       INSERT INTO recursive_memberships (root, object_id, object_type, level, email, firstname, fullname)
                       WITH RECURSIVE membership_chain(root, object_id, object_type, level, email, firstname, fullname)
                           AS (
-                              SELECT i.object_id, i.object_id, i.object_type, 0, i.email, i.firstname, i.fullname
-                              FROM identity i
+                              SELECT identity_record.object_id, identity_record.object_id, identity_record.object_type, 0, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM identity identity_record
                               UNION ALL
-                              SELECT membership_chain.root, mb.member_of, i.object_type, membership_chain.level + 1, i.email, i.firstname, i.fullname
-                              FROM membership mb
-                              JOIN membership_chain ON mb.subject = membership_chain.object_id
-                              JOIN identity i ON i.object_id = mb.member_of
+                              SELECT membership_chain.root, membership_record.member_of, identity_record.object_type, membership_chain.level + 1, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM membership membership_record
+                              JOIN membership_chain ON membership_record.subject = membership_chain.object_id
+                              JOIN identity identity_record ON identity_record.object_id = membership_record.member_of
                           )
                       SELECT DISTINCT * FROM membership_chain;
 
                       DELETE FROM recursive_members;
                       INSERT INTO recursive_members (root, object_id, object_type, level, email, firstname, fullname)
                       WITH RECURSIVE member_chain(root, object_id, object_type, level, email, firstname, fullname)
-                          AS (SELECT i.object_id, i.object_id, i.object_type, 0, i.email, i.firstname, i.fullname
-                              FROM identity i
+                          AS (
+                              SELECT identity_record.object_id, identity_record.object_id, identity_record.object_type, 0, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM identity identity_record
                               UNION ALL
-                              SELECT member_chain.root, mb.subject, i.object_type, member_chain.level + 1, i.email, i.firstname, i.fullname
-                              FROM membership mb
-                              JOIN member_chain ON mb.member_of = member_chain.object_id
-                              JOIN identity i ON i.object_id = mb.subject
+                              SELECT member_chain.root, membership_record.subject, identity_record.object_type, member_chain.level + 1, identity_record.email, identity_record.firstname, identity_record.fullname
+                              FROM membership membership_record
+                              JOIN member_chain ON membership_record.member_of = member_chain.object_id
+                              JOIN identity identity_record ON identity_record.object_id = membership_record.subject
                           )
                       SELECT DISTINCT * FROM member_chain;
                   END;
@@ -441,84 +460,34 @@ def turn_views_into_calculated_tables_20251127_001(db: DAL):
                   """)
 
     db.executesql("""
-                  CREATE TRIGGER recalc_memberships_on_membership_change
+                  CREATE TRIGGER refresh_memberships_on_membership_change
                       AFTER INSERT OR UPDATE OR DELETE ON membership
                       FOR EACH ROW
-                      EXECUTE FUNCTION recalc_recursive_memberships()
+                      EXECUTE FUNCTION refresh_recursive_memberships()
                   """)
 
     db.executesql("""
-                  CREATE TRIGGER recalc_members_on_membership_change
+                  CREATE TRIGGER refresh_members_on_membership_change
                       AFTER INSERT OR UPDATE OR DELETE ON membership
                       FOR EACH ROW
-                      EXECUTE FUNCTION recalc_recursive_members()
+                      EXECUTE FUNCTION refresh_recursive_members()
                   """)
 
     db.executesql("""
-                  CREATE TRIGGER recalc_memberships_on_identity_change
+                  CREATE TRIGGER refresh_memberships_on_identity_change
                       AFTER INSERT OR UPDATE OR DELETE ON identity
                       FOR EACH ROW
-                      EXECUTE FUNCTION recalc_recursive_memberships()
+                      EXECUTE FUNCTION refresh_recursive_memberships()
                   """)
 
     db.executesql("""
-                  CREATE TRIGGER recalc_members_on_identity_change
+                  CREATE TRIGGER refresh_members_on_identity_change
                       AFTER INSERT OR UPDATE OR DELETE ON identity
                       FOR EACH ROW
-                      EXECUTE FUNCTION recalc_recursive_members()
+                      EXECUTE FUNCTION refresh_recursive_members()
                   """)
 
-    db.executesql("SELECT repopulate_recursive_tables()")
+    # todo: more indexes?
+    db.executesql("SELECT rebuild_recursive_tables()")
     db.commit()
     return True
-
-
-# @migration()
-# def turn_views_into_materialized_20251127_001(db: DAL):
-#     db.executesql("""
-#                   CREATE MATERIALIZED VIEW mv_recursive_memberships AS
-#                   select distinct *
-#                   from recursive_memberships;
-#
-#                   CREATE UNIQUE INDEX ON mv_recursive_memberships (root, object_id, level);
-#                   """)
-#
-#     db.executesql("""
-#                   CREATE MATERIALIZED VIEW mv_recursive_members AS
-#                   select distinct *
-#                   from recursive_members;
-#
-#                   CREATE UNIQUE INDEX ON mv_recursive_members (root, object_id, level);
-#                   """)
-#
-#     db.executesql("""
-#                   CREATE
-#                   OR REPLACE FUNCTION refresh_membership_views()
-#                   RETURNS TRIGGER AS $$
-#                   BEGIN
-#                     REFRESH MATERIALIZED VIEW CONCURRENTLY mv_recursive_memberships;
-#                     REFRESH MATERIALIZED VIEW CONCURRENTLY mv_recursive_members;
-#                   RETURN NULL;
-#                   END;
-#                   $$
-#                   LANGUAGE plpgsql;
-#                   """)
-#
-#     db.executesql("""
-#                   CREATE TRIGGER refresh_memberships_on_change
-#                   AFTER INSERT OR UPDATE OR DELETE ON membership
-#                       FOR EACH STATEMENT
-#                       EXECUTE FUNCTION refresh_membership_views();
-#                   """)
-#
-#     db.executesql("""
-#                   CREATE TRIGGER refresh_memberships_on_identity_change
-#                       AFTER INSERT OR UPDATE OR DELETE ON "identity"
-#                       FOR EACH STATEMENT
-#                       EXECUTE FUNCTION refresh_membership_views();
-#                   """)
-#
-#     # fixme: on change identity, membership -> rematerialize both concurrently
-#     # fixme: refresh triggers, more indexes?
-#     db.commit()
-#     return True

@@ -87,6 +87,11 @@ def main():
     assert rbac.has_permission(new_group, new_item, "read")
     assert rbac.has_permission(new_user, new_item, "read")
 
+    rbac.remove_membership(new_user, new_group)
+
+    assert not rbac.has_membership(new_user, new_group)
+    assert not rbac.has_permission(new_user, new_item, "read")
+
     print(f"all assertions seem fine")
     rbac.total()
 
