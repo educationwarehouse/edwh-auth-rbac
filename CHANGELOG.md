@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.1 (2025-12-09)
+
+### Fix
+
+* Improved membership triggers to prevent ✨ disappearing  memberships ([`9e7e7b4`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/9e7e7b43c60dbff187c8333dd7b09dbf16523b52))
+
 ## v1.0.0 (2025-11-27)
 
 ### Breaking Changes
