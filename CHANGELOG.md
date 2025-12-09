@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.2 (2025-12-09)
+
+### Fix
+
+* Forgot to mark `@migration()` :( ([`1ff812e`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/1ff812eba7b022994d70cc9e4fed7ef169fd3558))
+
 ## v1.0.1 (2025-12-09)
 
 ### Fix

@@ -1,4 +1,4 @@
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 from .model import DEFAULT, DEFAULT_ENDS, DEFAULT_STARTS, key_lookup, unstr_datetime
 from .rbac import AuthRbac, Password
