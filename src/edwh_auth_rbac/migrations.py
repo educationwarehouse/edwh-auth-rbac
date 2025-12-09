@@ -556,6 +556,7 @@ def turn_views_into_calculated_tables_20251127_001(db: DAL):
     return True
 
 
+@migration()
 def fix_membership_triggers_20251209_001(db: DAL):
     db.executesql("""
                   CREATE OR REPLACE FUNCTION refresh_recursive_memberships()
