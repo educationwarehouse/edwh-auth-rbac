@@ -50,3 +50,10 @@ def test_postgres_migrate(conn_str: str, tempdir: str):
 
     for migration_name, migration in registered_migrations:
         assert migration(db)
+
+    # assert recursive_memberships has an ID column now:
+    db.executesql("""
+         SELECT id
+             FROM recursive_memberships
+             LIMIT 1;
+         """)

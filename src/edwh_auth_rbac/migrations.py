@@ -690,3 +690,73 @@ def fix_membership_triggers_20251209_001(db: DAL):
                   """)
     db.commit()
     return True
+
+
+@migration()
+def add_integer_ids_to_recursive_views_20260619_001(db: DAL):
+    if db._dbname == "postgres":
+        # not a view, calculcated table already has id
+        return True
+
+    wipe_views(db)
+
+    db.executesql(
+        """
+        CREATE VIEW recursive_memberships AS
+            WITH RECURSIVE m(root, object_id, object_type, level, email, firstname, fullname) AS (
+                SELECT object_id AS root,
+                       object_id,
+                       object_type,
+                       0,
+                       email,
+                       firstname,
+                       fullname
+                FROM identity
+                UNION ALL
+                SELECT root,
+                       membership.member_of,
+                       i.object_type,
+                       m.level + 1,
+                       i.email,
+                       i.firstname,
+                       i.fullname
+                FROM membership
+                JOIN m ON subject = m.object_id
+                JOIN identity i ON i.object_id = membership.member_of
+            )
+        SELECT row_number() OVER (ORDER BY root, object_id, level) AS id, *
+        FROM m;
+        """,
+    )
+
+    db.executesql(
+        """
+        CREATE VIEW recursive_members AS
+            WITH RECURSIVE m(root, object_id, object_type, level, email, firstname, fullname) AS (
+                SELECT object_id AS root,
+                       object_id,
+                       object_type,
+                       0,
+                       email,
+                       firstname,
+                       fullname
+                FROM identity
+                UNION ALL
+                SELECT root,
+                       membership.subject,
+                       i.object_type,
+                       m.level + 1,
+                       i.email,
+                       i.firstname,
+                       i.fullname
+                FROM membership
+                JOIN m ON member_of = m.object_id
+                JOIN identity i ON i.object_id = membership.subject
+            )
+        SELECT row_number() OVER (ORDER BY root, object_id, level) AS id, *
+        FROM m;
+        """,
+    )
+
+    db.commit()
+    return True

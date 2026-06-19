@@ -364,7 +364,6 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("fullname"),
         migrate=False,  # view
         redefine=redefine,
-        primarykey=["root", "object_id"],  # composed, no primary key
         rname="recursive_memberships",
     )
     db.define_table(
@@ -378,7 +377,6 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("fullname"),
         migrate=False,  # view
         redefine=redefine,
-        primarykey=["root", "object_id"],  # composed, no primary key
         rname="recursive_members",
     )
 

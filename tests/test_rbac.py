@@ -6,7 +6,7 @@ import dotmap
 import pytest
 from pydal import DAL
 
-from src.edwh_auth_rbac.migrations import rbac_views
+from src.edwh_auth_rbac.migrations import add_integer_ids_to_recursive_views_20260619_001, rbac_views
 from src.edwh_auth_rbac.model import define_auth_rbac_model
 from src.edwh_auth_rbac.rbac import AuthRbac
 
@@ -40,6 +40,7 @@ def database(tmpdir):
 
             define_auth_rbac_model(self.db, settings)
             rbac_views(self.db)
+            add_integer_ids_to_recursive_views_20260619_001(self.db)
             return self.db
 
         def __exit__(self, exc_type, exc_value, traceback):
