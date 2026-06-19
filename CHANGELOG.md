@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.3 (2026-06-19)
+
+### Fix
+
+* Add 'id' to recursive_ views so we can use it in grids ([`b5b858d`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/b5b858df2b599447bb8299c88c97b8e5a9de8fc1))
+
 ## v1.0.2 (2025-12-09)
 
 ### Fix
