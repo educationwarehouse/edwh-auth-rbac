@@ -24,8 +24,8 @@ Database Schema:
 - identity: Core identity records with object_id, type, and credentials
 - membership: Direct membership relationships between identities
 - permission: Time-bound privilege grants from identity to target
-- recursive_memberships: View showing all indirect memberships
-- recursive_members: View showing all indirect members
+- recursive_memberships: Materialized recursive memberships with one shortest-path row per pair
+- recursive_members: Materialized recursive members with one shortest-path row per pair
 
 Edge Cases Handled:
 - Circular group memberships are prevented by the recursive view logic
@@ -283,8 +283,8 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
     - identity: Stores user, group, and item identities with their attributes
     - membership: Defines direct membership relationships between identities
     - permission: Grants privileges to identities on target objects with time bounds
-    - recursive_memberships: View showing all indirect memberships (read-only)
-    - recursive_members: View showing all indirect members (read-only)
+    - recursive_memberships: Materialized recursive memberships (read-only)
+    - recursive_members: Materialized recursive members (read-only)
 
     Parameters
     ----------
@@ -358,7 +358,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("root"),
         Field("object_id"),
         Field("object_type"),
-        Field("level", "integer"),
+        Field("level", "integer", comment="Shortest-path depth from root to object_id, capped at 20"),
         Field("email"),
         Field("firstname"),
         Field("fullname"),
@@ -371,7 +371,7 @@ def define_auth_rbac_model(db: DAL, other_args: RbacKwargs):
         Field("root"),
         Field("object_id"),
         Field("object_type"),
-        Field("level", "integer"),
+        Field("level", "integer", comment="Shortest-path depth from root to object_id, capped at 20"),
         Field("email"),
         Field("firstname"),
         Field("fullname"),
@@ -717,9 +717,10 @@ def get_memberships(db: DAL, object_id: IdentityKey, bare: bool = True):
     """
     Retrieves all groups that an identity is a member of (including indirect memberships).
 
-    This function queries the recursive_memberships view to find all groups that
+    This function queries the recursive_memberships table to find all groups that
     the specified identity belongs to, including both direct and indirect memberships
-    through group nesting.
+    through group nesting. Each reachable identity appears at most once per root,
+    using the minimum level found, and traversal stops after 20 hops.
 
     Parameters
     ----------
@@ -738,7 +739,7 @@ def get_memberships(db: DAL, object_id: IdentityKey, bare: bool = True):
     Edge Cases
     ----------
     - Returns empty result if the identity has no memberships
-    - Uses the recursive_memberships view which includes nested group memberships
+    - Uses the recursive_memberships table which stores shortest-path nested memberships up to 20 hops
     """
 
     query = db.recursive_memberships.root == object_id
@@ -750,9 +751,10 @@ def get_members(db: DAL, object_id: IdentityKey, bare: bool = True):
     """
     Retrieves all identities that are members of a group (including indirect members).
 
-    This function queries the recursive_members view to find all identities that
+    This function queries the recursive_members table to find all identities that
     belong to the specified group, including both direct and indirect members
-    through group nesting.
+    through group nesting. Each reachable identity appears at most once per root,
+    using the minimum level found, and traversal stops after 20 hops.
 
     Parameters
     ----------
@@ -771,7 +773,7 @@ def get_members(db: DAL, object_id: IdentityKey, bare: bool = True):
     Edge Cases
     ----------
     - Returns empty result if the group has no members
-    - Uses the recursive_members view which includes nested group members
+    - Uses the recursive_members table which stores shortest-path nested members up to 20 hops
     """
 
     query = db.recursive_members.root == object_id

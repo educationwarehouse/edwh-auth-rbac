@@ -917,3 +917,169 @@ def optimize_recursive_table_rebuilds_20260622_001(db):
 
     db.commit()
     return True
+
+
+@migration()
+def align_recursive_refresh_semantics_20260622_002(db: DAL):
+    if db._dbname != "postgres":
+        return True
+
+    db.executesql("""
+                  CREATE OR REPLACE FUNCTION refresh_recursive_memberships()
+                      RETURNS TRIGGER AS
+                  $$
+                  DECLARE
+                      affected_roots uuid[];
+                      affected_ids   uuid[];
+                  BEGIN
+                      IF TG_TABLE_NAME = 'membership' THEN
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY [OLD.subject, OLD.member_of];
+                          ELSE
+                              affected_ids := ARRAY [NEW.subject, NEW.member_of];
+                          END IF;
+
+                          affected_roots := affected_ids || ARRAY(
+                                  SELECT DISTINCT root
+                                  FROM recursive_memberships
+                                  WHERE object_id = ANY (affected_ids)
+                                                            );
+                      ELSIF TG_TABLE_NAME = 'identity' THEN
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY [OLD.object_id];
+                              affected_roots := ARRAY [OLD.object_id];
+                          ELSE
+                              affected_ids := ARRAY [NEW.object_id];
+                              affected_roots := ARRAY [NEW.object_id];
+                          END IF;
+                      END IF;
+
+                      DELETE
+                      FROM recursive_memberships
+                      WHERE root = ANY (affected_roots);
+
+                      INSERT INTO recursive_memberships (root, object_id, object_type, level, email, firstname, fullname)
+                      WITH RECURSIVE membership_chain(root, object_id, level) AS (
+                          SELECT
+                              identity_record.object_id,
+                              identity_record.object_id,
+                              0
+                          FROM identity identity_record
+                          WHERE identity_record.object_id = ANY (affected_roots)
+                          UNION ALL
+                          SELECT
+                              membership_chain.root,
+                              membership_record.member_of,
+                              membership_chain.level + 1
+                          FROM membership membership_record
+                                   JOIN membership_chain
+                                        ON membership_record.subject = membership_chain.object_id
+                          WHERE membership_chain.level < 20
+                      ),
+                                     deduplicated_membership_chain AS (
+                                         SELECT
+                                             membership_chain.root,
+                                             membership_chain.object_id,
+                                             MIN(membership_chain.level) AS level
+                                         FROM membership_chain
+                                         GROUP BY
+                                             membership_chain.root,
+                                             membership_chain.object_id
+                                     )
+                      SELECT
+                          deduplicated_membership_chain.root,
+                          deduplicated_membership_chain.object_id,
+                          identity_record.object_type,
+                          deduplicated_membership_chain.level,
+                          identity_record.email,
+                          identity_record.firstname,
+                          identity_record.fullname
+                      FROM deduplicated_membership_chain
+                               JOIN identity identity_record
+                                    ON identity_record.object_id = deduplicated_membership_chain.object_id;
+
+                      RETURN NULL;
+                  END;
+                  $$ LANGUAGE plpgsql;
+                  """)
+
+    db.executesql("""
+                  CREATE OR REPLACE FUNCTION refresh_recursive_members()
+                      RETURNS TRIGGER AS
+                  $$
+                  DECLARE
+                      affected_roots uuid[];
+                      affected_ids   uuid[];
+                  BEGIN
+                      IF TG_TABLE_NAME = 'membership' THEN
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY [OLD.subject, OLD.member_of];
+                          ELSE
+                              affected_ids := ARRAY [NEW.subject, NEW.member_of];
+                          END IF;
+
+                          affected_roots := affected_ids || ARRAY(
+                                  SELECT DISTINCT root
+                                  FROM recursive_members
+                                  WHERE object_id = ANY (affected_ids)
+                                                            );
+                      ELSIF TG_TABLE_NAME = 'identity' THEN
+                          IF TG_OP = 'DELETE' THEN
+                              affected_ids := ARRAY [OLD.object_id];
+                              affected_roots := ARRAY [OLD.object_id];
+                          ELSE
+                              affected_ids := ARRAY [NEW.object_id];
+                              affected_roots := ARRAY [NEW.object_id];
+                          END IF;
+                      END IF;
+
+                      DELETE
+                      FROM recursive_members
+                      WHERE root = ANY (affected_roots);
+
+                      INSERT INTO recursive_members (root, object_id, object_type, level, email, firstname, fullname)
+                      WITH RECURSIVE member_chain(root, object_id, level) AS (
+                          SELECT
+                              identity_record.object_id,
+                              identity_record.object_id,
+                              0
+                          FROM identity identity_record
+                          WHERE identity_record.object_id = ANY (affected_roots)
+                          UNION ALL
+                          SELECT
+                              member_chain.root,
+                              membership_record.subject,
+                              member_chain.level + 1
+                          FROM membership membership_record
+                                   JOIN member_chain ON membership_record.member_of = member_chain.object_id
+                          WHERE member_chain.level < 20
+                      ),
+                                     deduplicated_member_chain AS (
+                                         SELECT
+                                             member_chain.root,
+                                             member_chain.object_id,
+                                             MIN(member_chain.level) AS level
+                                         FROM member_chain
+                                         GROUP BY
+                                             member_chain.root,
+                                             member_chain.object_id
+                                     )
+                      SELECT
+                          deduplicated_member_chain.root,
+                          deduplicated_member_chain.object_id,
+                          identity_record.object_type,
+                          deduplicated_member_chain.level,
+                          identity_record.email,
+                          identity_record.firstname,
+                          identity_record.fullname
+                      FROM deduplicated_member_chain
+                               JOIN identity identity_record
+                                    ON identity_record.object_id = deduplicated_member_chain.object_id;
+
+                      RETURN NULL;
+                  END;
+                  $$ LANGUAGE plpgsql;
+                  """)
+
+    db.commit()
+    return True
