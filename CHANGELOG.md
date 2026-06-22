@@ -2,6 +2,20 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0 (2026-06-22)
+
+### Feature
+
+* Optimize recursive table rebuild query ([`9c78f11`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/9c78f111e8ab5cac76092cc1ba2979a98bc2a6cb))
+
+### Fix
+
+* Speed++ for `rebuild_recursive_tables` ([`2ddf06c`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/2ddf06ca3b20e65056cee429a5090818916e254e))
+
+### Breaking
+
+* optimize recursive table rebuild query ([`9c78f11`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/9c78f111e8ab5cac76092cc1ba2979a98bc2a6cb))
+
 ## v1.0.3 (2026-06-19)
 
 ### Fix
