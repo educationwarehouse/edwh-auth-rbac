@@ -760,3 +760,160 @@ def add_integer_ids_to_recursive_views_20260619_001(db: DAL):
 
     db.commit()
     return True
+
+
+@migration()
+def optimize_recursive_table_rebuilds_20260622_001(db):
+    if db._dbname != "postgres":
+        return True
+
+    db.executesql("""
+                  CREATE INDEX IF NOT EXISTS identity_object_id_idx
+                      ON identity (object_id);
+
+                  CREATE INDEX IF NOT EXISTS identity_email_idx
+                      ON identity (email);
+
+                  CREATE INDEX IF NOT EXISTS membership_subject_idx
+                      ON membership (subject);
+
+                  CREATE INDEX IF NOT EXISTS membership_member_of_idx
+                      ON membership (member_of);
+
+                  CREATE INDEX IF NOT EXISTS membership_subject_member_of_idx
+                      ON membership (subject, member_of);
+
+                  CREATE INDEX IF NOT EXISTS membership_member_of_subject_idx
+                      ON membership (member_of, subject);
+
+                  CREATE INDEX IF NOT EXISTS recursive_memberships_root_idx
+                      ON recursive_memberships (root);
+
+                  CREATE INDEX IF NOT EXISTS recursive_memberships_object_id_idx
+                      ON recursive_memberships (object_id);
+
+                  CREATE INDEX IF NOT EXISTS recursive_memberships_root_object_id_idx
+                      ON recursive_memberships (root, object_id);
+
+                  CREATE INDEX IF NOT EXISTS recursive_members_root_idx
+                      ON recursive_members (root);
+
+                  CREATE INDEX IF NOT EXISTS recursive_members_object_id_idx
+                      ON recursive_members (object_id);
+
+                  CREATE INDEX IF NOT EXISTS recursive_members_root_object_id_idx
+                      ON recursive_members (root, object_id);
+                  """)
+
+    db.executesql("""
+                  CREATE OR REPLACE FUNCTION rebuild_recursive_tables()
+                      RETURNS void AS
+                  $$
+                  BEGIN
+                      TRUNCATE TABLE recursive_memberships;
+
+                      INSERT INTO recursive_memberships (
+                          root,
+                          object_id,
+                          object_type,
+                          level,
+                          email,
+                          firstname,
+                          fullname
+                      )
+                      WITH RECURSIVE membership_chain(root, object_id, level) AS (
+                          SELECT
+                              identity_record.object_id AS root,
+                              identity_record.object_id AS object_id,
+                              0 AS level
+                          FROM identity identity_record
+
+                          UNION ALL
+
+                          SELECT
+                              membership_chain.root,
+                              membership_record.member_of AS object_id,
+                              membership_chain.level + 1 AS level
+                          FROM membership membership_record
+                          JOIN membership_chain
+                              ON membership_record.subject = membership_chain.object_id
+                          WHERE membership_chain.level < 20
+                      ),
+                      deduplicated_membership_chain AS (
+                          SELECT
+                              membership_chain.root,
+                              membership_chain.object_id,
+                              MIN(membership_chain.level) AS level
+                          FROM membership_chain
+                          GROUP BY
+                              membership_chain.root,
+                              membership_chain.object_id
+                      )
+                      SELECT
+                          deduplicated_membership_chain.root,
+                          deduplicated_membership_chain.object_id,
+                          identity_record.object_type,
+                          deduplicated_membership_chain.level,
+                          identity_record.email,
+                          identity_record.firstname,
+                          identity_record.fullname
+                      FROM deduplicated_membership_chain
+                      JOIN identity identity_record
+                          ON identity_record.object_id = deduplicated_membership_chain.object_id;
+
+                      TRUNCATE TABLE recursive_members;
+
+                      INSERT INTO recursive_members (
+                          root,
+                          object_id,
+                          object_type,
+                          level,
+                          email,
+                          firstname,
+                          fullname
+                      )
+                      WITH RECURSIVE member_chain(root, object_id, level) AS (
+                          SELECT
+                              identity_record.object_id AS root,
+                              identity_record.object_id AS object_id,
+                              0 AS level
+                          FROM identity identity_record
+
+                          UNION ALL
+
+                          SELECT
+                              member_chain.root,
+                              membership_record.subject AS object_id,
+                              member_chain.level + 1 AS level
+                          FROM membership membership_record
+                          JOIN member_chain
+                              ON membership_record.member_of = member_chain.object_id
+                          WHERE member_chain.level < 20
+                      ),
+                      deduplicated_member_chain AS (
+                          SELECT
+                              member_chain.root,
+                              member_chain.object_id,
+                              MIN(member_chain.level) AS level
+                          FROM member_chain
+                          GROUP BY
+                              member_chain.root,
+                              member_chain.object_id
+                      )
+                      SELECT
+                          deduplicated_member_chain.root,
+                          deduplicated_member_chain.object_id,
+                          identity_record.object_type,
+                          deduplicated_member_chain.level,
+                          identity_record.email,
+                          identity_record.firstname,
+                          identity_record.fullname
+                      FROM deduplicated_member_chain
+                      JOIN identity identity_record
+                          ON identity_record.object_id = deduplicated_member_chain.object_id;
+                  END;
+                  $$ LANGUAGE plpgsql;
+                  """)
+
+    db.commit()
+    return True

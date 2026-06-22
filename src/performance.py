@@ -92,7 +92,7 @@ def main():
     assert not rbac.has_membership(new_user, new_group)
     assert not rbac.has_permission(new_user, new_item, "read")
 
-    print(f"all assertions seem fine")
+    print("all assertions seem fine")
     rbac.total()
 
     # sorted_timings = sorted((
