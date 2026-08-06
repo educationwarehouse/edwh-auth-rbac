@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    'dotmap',
     'edwh-migrate',
     'pydal',
     "python-dateutil",
@@ -31,12 +30,13 @@ dependencies = [
 dev = [
     "hatch",
     "python-semantic-release<8",
+    'dotmap',
     "edwh",
     "edwh-migrate",
     "su6[all]",
     "testcontainers",
     "requests<2.32", # 2.32 breaks testcontainers
-    "psycopg2-binary"
+    "psycopg2-binary",
 ]
 
 [project.urls]
