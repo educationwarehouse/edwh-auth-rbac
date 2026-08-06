@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.1 (2026-08-06)
+
+### Fix
+
+* Move `dotmap` to dev-dependency only ([`1fa3677`](https://github.com/educationwarehouse/edwh-auth-rbac/commit/1fa3677ec442d172cf4f5d7dbf4ef3eaeb753b0b))
+
 ## v2.0.0 (2026-06-22)
 
 ### Feature
