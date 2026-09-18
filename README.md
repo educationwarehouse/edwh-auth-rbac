@@ -40,22 +40,18 @@ from pydal import DAL
 from edwh_auth_rbac import AuthRbac
 
 # Initialize database
-db = DAL('sqlite://storage.sqlite')
+db = DAL("sqlite://storage.sqlite")
 
 # Initialize RBAC
 rbac = AuthRbac(db)
-rbac.define_model(allowed_types=['user', 'group', 'item'], migrate=True)
+rbac.define_model(allowed_types=["user", "group", "item"], migrate=True)
 ```
 
 ### Creating Users and Groups
 
 ```python
 # Create a group
-admin_group = rbac.add_group(
-    email="admin@example.com",
-    name="Administrators",
-    member_of=[]
-)
+admin_group = rbac.add_group(email="admin@example.com", name="Administrators", member_of=[])
 
 # Create a user
 user = rbac.add_user(
@@ -63,7 +59,7 @@ user = rbac.add_user(
     firstname="John",
     fullname="John Doe",
     password="secure_password",
-    member_of=[admin_group['object_id']]  # Add user to admin group
+    member_of=[admin_group["object_id"]],  # Add user to admin group
 )
 ```
 
@@ -71,29 +67,17 @@ user = rbac.add_user(
 
 ```python
 # Grant read permission to a user on a resource
-rbac.add_permission(
-    identity_key=user['object_id'],
-    target_oid="document_123",
-    privilege="read"
-)
+rbac.add_permission(identity_key=user["object_id"], target_oid="document_123", privilege="read")
 
 # Grant write permission to a group (affects all members)
-rbac.add_permission(
-    identity_key=admin_group['object_id'],
-    target_oid="document_123",
-    privilege="write"
-)
+rbac.add_permission(identity_key=admin_group["object_id"], target_oid="document_123", privilege="write")
 ```
 
 ### Checking Permissions
 
 ```python
 # Check if user has permission
-has_read = rbac.has_permission(
-    identity_key=user['object_id'],
-    target_oid="document_123",
-    privilege="read"
-)
+has_read = rbac.has_permission(identity_key=user["object_id"], target_oid="document_123", privilege="read")
 
 print(f"User has read permission: {has_read}")
 ```
@@ -107,8 +91,8 @@ Groups can contain other groups, creating a hierarchy:
 ```python
 # Create nested groups
 root_group = rbac.add_group(email="root@example.com", name="Root", member_of=[])
-middle_group = rbac.add_group(email="middle@example.com", name="Middle", member_of=[root_group['object_id']])
-leaf_group = rbac.add_group(email="leaf@example.com", name="Leaf", member_of=[middle_group['object_id']])
+middle_group = rbac.add_group(email="middle@example.com", name="Middle", member_of=[root_group["object_id"]])
+leaf_group = rbac.add_group(email="leaf@example.com", name="Leaf", member_of=[middle_group["object_id"]])
 
 # Add user to leaf group
 user = rbac.add_user(
@@ -116,7 +100,7 @@ user = rbac.add_user(
     firstname="User",
     fullname="Test User",
     password="password",
-    member_of=[leaf_group['object_id']]
+    member_of=[leaf_group["object_id"]],
 )
 
 # User now has permissions granted to any of the parent groups
@@ -130,11 +114,11 @@ Permissions can be granted for specific time periods:
 import datetime as dt
 
 rbac.add_permission(
-    identity_key=user['object_id'],
+    identity_key=user["object_id"],
     target_oid="document_123",
     privilege="read",
     starts=dt.datetime(2023, 1, 1),
-    ends=dt.datetime(2023, 12, 31)
+    ends=dt.datetime(2023, 12, 31),
 )
 ```
 
