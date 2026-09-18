@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.12.4,<0.13"]
+build-backend = "uv_build"
 
 [project]
 name = "edwh-auth-rbac"
-dynamic = ["version"]
+version = "2.0.1"
 description = 'Recursive Memberships and Permissions for the Education Warehouse Authentication System'
 readme = "README.md"
 requires-python = ">=3.11"
@@ -46,16 +46,13 @@ Issues = "https://github.com/educationwarehouse/edwh-auth-rbac/issues"
 Source = "https://github.com/educationwarehouse/edwh-auth-rbac"
 
 
-[tool.hatch.version]
-path = "src/edwh_auth_rbac/__init__.py"
-
 [tool.semantic_release]
 branch = "master"
 version_variable = "src/edwh_auth_rbac/__init__.py:__version__"
 change_log = "CHANGELOG.md"
 upload_to_repository = false
 upload_to_release = false
-build_command = "hatch build"
+build_command = "uv build"
 
 [tool.su6]
 directory = "src"
@@ -86,10 +83,6 @@ extend-exclude = '''
 [tool.ruff]
 target-version = "py311"
 line-length = 120
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/edwh_auth_rbac"]
-
 
 [tool.isort]
 profile = "black"
