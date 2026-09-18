@@ -32,10 +32,8 @@ Edge Cases Handled:
 """
 
 import logging
-import typing
-from typing import Optional
+import typing as t
 
-from pydal import DAL
 from typing_extensions import NotRequired, Unpack
 
 from . import model
@@ -53,18 +51,27 @@ from .model import (
     unstr_datetime,
 )
 
+if t.TYPE_CHECKING:
+    from pydal import DAL
+else:
+    from pydal import DAL as pyDAL
+    from typedal import TypeDAL
+
+    DAL: t.TypeAlias = pyDAL | TypeDAL
+
+
 _pylog = logging.getLogger(__name__)
 _pylog.setLevel(logging.INFO)
 
 
-class MinimalIdentityDict(typing.TypedDict):
+class MinimalIdentityDict(t.TypedDict):
     object_id: str
     object_type: NotRequired[ObjectTypes]
     email: str
     name: str
 
 
-class UserDict(typing.TypedDict):
+class UserDict(t.TypedDict):
     """
     Typed dictionary representing a user identity.
 
@@ -80,7 +87,7 @@ class UserDict(typing.TypedDict):
     memberships: NotRequired[list["UserDict"]]
 
 
-class GroupDict(typing.TypedDict):
+class GroupDict(t.TypedDict):
     """
     Typed dictionary representing a group identity.
 
@@ -166,7 +173,7 @@ class AuthRbac:
         fullname: str,
         password: str,
         member_of: list[IdentityKey],
-        gid: Optional[str] = None,
+        gid: str | None = None,
         allow_existing: bool = False,
     ) -> UserDict:
         """
@@ -229,8 +236,8 @@ class AuthRbac:
         email: str,
         name: str,
         member_of: list[IdentityKey],
-        password: Optional[str] = None,
-        gid: Optional[str] = None,
+        password: str | None = None,
+        gid: str | None = None,
         allow_existing: bool = False,
     ) -> MinimalIdentityDict:
         """
@@ -285,8 +292,8 @@ class AuthRbac:
         name: str,
         member_of: list[IdentityKey],
         object_type: ObjectTypes,
-        password: Optional[str] = None,
-        gid: Optional[str] = None,
+        password: str | None = None,
+        gid: str | None = None,
         allow_existing: bool = False,
     ) -> MinimalIdentityDict:
         """
@@ -341,7 +348,7 @@ class AuthRbac:
         email: str,
         name: str,
         member_of: list[IdentityKey],
-        gid: Optional[str] = None,
+        gid: str | None = None,
         allow_existing: bool = False,
     ) -> MinimalIdentityDict:
         """
@@ -382,12 +389,12 @@ class AuthRbac:
     def update_identity(
         self,
         object_id: IdentityKey,
-        email: Optional[str] = None,
-        name: Optional[str] = None,
-        firstname: Optional[str] = None,
-        lastname: Optional[str] = None,
-        fullname: Optional[str] = None,
-        password: Optional[str] = None,
+        email: str | None = None,
+        name: str | None = None,
+        firstname: str | None = None,
+        lastname: str | None = None,
+        fullname: str | None = None,
+        password: str | None = None,
     ) -> None:
         """
         Update an existing identity's information.
@@ -421,7 +428,7 @@ class AuthRbac:
         )
         # self.# db.commit()
 
-    def get_identity(self, key: IdentityKey | None, object_type: Optional[ObjectTypes] = None) -> model.Identity | None:
+    def get_identity(self, key: IdentityKey | None, object_type: ObjectTypes | None = None) -> model.Identity | None:
         """
         :param key: can be the email, id, or object_id
         :param object_type: what type of object to look for
@@ -643,7 +650,7 @@ class AuthRbac:
         self,
         identity_key: IdentityKey,
         target_oid: IdentityKey,
-        privileges: typing.Iterable[str],
+        privileges: t.Iterable[str],
         starts: When = DEFAULT_STARTS,
         ends: When = DEFAULT_ENDS,
     ) -> None:
@@ -676,7 +683,7 @@ class AuthRbac:
         identity_key: IdentityKey,
         target_oid: IdentityKey,
         privilege: str,
-        when: Optional[When] = None,
+        when: When | None = None,
     ) -> bool:
         """
         Check if an identity has a specific permission on a target object at a given time.
@@ -711,7 +718,7 @@ class AuthRbac:
         identity_key: IdentityKey,
         target_oid: IdentityKey,
         privilege: str,
-        when: Optional[When] = None,
+        when: When | None = None,
     ) -> bool:
         """
         Revoke a permission from an identity on a target object.
