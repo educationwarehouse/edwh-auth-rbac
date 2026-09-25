@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.2 (2026-09-18)
+
+### Fix
+* **rbac:** modernize annotations and support typed DAL
+
+### Documentation
+* **readme:** modernize Python examples
+
 ## v2.0.1 (2026-08-06)
 
 ### Fix
