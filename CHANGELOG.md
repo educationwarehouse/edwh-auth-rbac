@@ -1,6 +1,6 @@
 # Changelog
 
-<!-- next-version-placeholder -->
+<!--next-version-placeholder-->
 
 ## v2.0.2 (2026-09-18)
 

@@ -1,4 +1,6 @@
-__version__ = "2.0.1"
+from importlib.metadata import version
+
+__version__ = version("edwh-auth-rbac")
 
 from .model import DEFAULT, DEFAULT_ENDS, DEFAULT_STARTS, key_lookup, unstr_datetime
 from .rbac import AuthRbac, Password
